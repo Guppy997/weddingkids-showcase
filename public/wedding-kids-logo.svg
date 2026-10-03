@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 768 768" role="img" aria-label="WeddingKids Logo">
+  <rect width="768" height="768" fill="#ffffff" />
+
+  <text
+    x="384"
+    y="402"
+    text-anchor="middle"
+    font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+    font-size="74"
+    font-weight="300"
+    letter-spacing="1"
+    fill="#8f949b"
+  >
+    WeddingKids
+  </text>
+
+  <path
+    d="M640 326c-7 0-13 2-19 7-6-5-12-7-19-7-17 0-31 14-31 33 0 11 5 21 14 28l36 30 36-30c9-7 14-17 14-28 0-19-14-33-31-33z"
+    fill="#d8e6f1"
+  />
+</svg>
