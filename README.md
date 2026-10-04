@@ -1,6 +1,8 @@
-# WeddingKids PWA
+# WeddingKids PWA – Showcase
 
-[![CI](https://github.com/Guppy997/weddingkids-pwa/actions/workflows/ci.yml/badge.svg)](https://github.com/Guppy997/weddingkids-pwa/actions/workflows/ci.yml)
+[![CI](https://github.com/Guppy997/weddingkids-showcase/actions/workflows/ci.yml/badge.svg)](https://github.com/Guppy997/weddingkids-showcase/actions/workflows/ci.yml)
+
+> **Showcase-Version:** bereinigter Export mit erfundenen Demo-Daten. Der Produktivcode liegt in einem privaten Repository.
 
 Planungs-App für ein kleines Unternehmen, das **Kinderbetreuung auf Hochzeiten** anbietet. Das Team (2 Inhaberinnen, 14 Betreuer:innen) koordiniert darüber, wer bei welcher Hochzeit arbeitet: Anfragen kommen herein, alle melden ihre Verfügbarkeit, die Inhaberinnen teilen ein — und jede:r sieht die eigenen Einsätze im Kalender.
 

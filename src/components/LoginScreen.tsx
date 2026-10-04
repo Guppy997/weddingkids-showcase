@@ -80,6 +80,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onShowLegal }) => {
           <p className="text-sm text-gray-500 mt-2">
             {screen === 'login' ? 'Hochzeitsverwaltung für Mitarbeitende' : 'Zugang beantragen'}
           </p>
+          {/* Nur im Showcase: zeigt, dass hier Demo-Daten liegen, und nennt die Demo-Logins
+              aus scripts/seed-demo.ts. Im Produktivcode gibt es diesen Hinweis nicht. */}
+          {screen === 'login' && (
+            <p className="mt-3 px-3 py-1 rounded-full text-xs font-medium bg-status-yellow-bg text-status-yellow-text border border-status-yellow-text/20">
+              Demo-Version · Login: lena oder marie / demo1234
+            </p>
+          )}
         </div>
 
         <AnimatePresence mode="wait">
