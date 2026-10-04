@@ -2,6 +2,7 @@ import React from 'react';
 import { Users, Heart } from 'lucide-react';
 import { Wedding, Staff, Availability } from '../types';
 import { WeddingInfoBlock } from './WeddingInfoBlock';
+import { WEDDING_STATUS_BADGE } from '../lib/status';
 
 
 interface WeddingCardProps {
@@ -40,15 +41,7 @@ export const WeddingCard: React.FC<WeddingCardProps> = ({ wedding, onClick, staf
     >
       <div className="flex justify-between items-start mb-2">
         <h3 className="font-bold text-lg text-text-main">{wedding.coupleNames}</h3>
-        <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${
-          wedding.status === 'Gebucht'
-            ? 'bg-status-yellow-bg text-status-yellow-text'
-            : wedding.status === 'Geplant'
-            ? 'bg-status-green-bg text-status-green-text'
-            : wedding.status === 'Abgesagt'
-            ? 'bg-status-red-bg text-status-red-text'
-            : 'bg-primary/10 text-primary'
-        }`}>
+        <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${WEDDING_STATUS_BADGE[wedding.status]}`}>
           {wedding.status}
         </span>
       </div>

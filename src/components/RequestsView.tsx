@@ -4,6 +4,7 @@ import { CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
 import { Wedding, Staff, Availability } from '../types';
 import { WeddingInfoBlock } from './WeddingInfoBlock';
 import { VoteIcon } from './VoteIcon';
+import { WEDDING_STATUS_BADGE } from '../lib/status';
 
 
 interface RequestsViewProps {
@@ -103,15 +104,7 @@ export const RequestsView: React.FC<RequestsViewProps> = ({
               <div className="p-4 border-b border-gray-100">
                 <div className="flex justify-between items-start mb-3">
                   <h3 className="font-bold text-base text-text-main">{wedding.coupleNames}</h3>
-                  <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${
-                    wedding.status === 'Gebucht'
-                      ? 'bg-status-green-bg text-status-green-text'
-                      : wedding.status === 'Geplant'
-                      ? 'bg-status-green-bg text-status-green-text'
-                      : wedding.status === 'Abgesagt'
-                      ? 'bg-status-red-bg text-status-red-text'
-                      : 'bg-primary/10 text-primary'
-                  }`}>
+                  <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${WEDDING_STATUS_BADGE[wedding.status]}`}>
                     {wedding.status}
                   </span>
                 </div>

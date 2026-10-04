@@ -2,6 +2,7 @@ import React from 'react';
 import { ChevronDown, ChevronUp, Heart } from 'lucide-react';
 import type { Wedding } from '../../types';
 import { WeddingInfoBlock } from '../WeddingInfoBlock';
+import { WEDDING_STATUS_BADGE } from '../../lib/status';
 
 interface CalendarListViewProps {
   sorted: Wedding[];
@@ -22,12 +23,7 @@ export const CalendarListView: React.FC<CalendarListViewProps> = ({
   // Shared card renderer — eingeklappt: nur Datum + Status, Tap erweitert
   const renderCard = (wedding: Wedding, mine: boolean) => {
     const d = new Date(wedding.date);
-    const statusClass =
-      wedding.status === 'Gebucht' ? 'bg-status-green-bg text-status-green-text'
-      : wedding.status === 'Geplant' ? 'bg-status-green-bg text-status-green-text'
-      : wedding.status === 'Abgesagt' ? 'bg-status-red-bg text-status-red-text'
-      : wedding.status === 'Anfrage' ? 'bg-[#FBF4E0] text-[#8A6A30]'
-      : 'bg-primary/10 text-primary';
+    const statusClass = WEDDING_STATUS_BADGE[wedding.status];
     const isExpanded = expandedWeddingId === wedding.id;
     return (
       <div

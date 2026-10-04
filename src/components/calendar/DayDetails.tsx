@@ -1,6 +1,7 @@
 import React from 'react';
 import { Calendar as CalendarIcon, Trash2, Pencil } from 'lucide-react';
 import type { Wedding, AdminEvent } from '../../types';
+import { WEDDING_STATUS_BADGE } from '../../lib/status';
 
 interface DayDetailsProps {
   selectedDateKey: string;
@@ -132,17 +133,7 @@ export const DayDetails: React.FC<DayDetailsProps> = ({
                       <p className="text-xs text-gray-500">{wedding.childrenCount} Kinder</p>
                     )}
                   </div>
-                  <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider flex-shrink-0 ml-2 ${
-                    wedding.status === 'Gebucht'
-                      ? 'bg-status-green-bg text-status-green-text'
-                      : wedding.status === 'Geplant'
-                      ? 'bg-status-green-bg text-status-green-text'
-                      : wedding.status === 'Abgesagt'
-                      ? 'bg-status-red-bg text-status-red-text'
-                      : wedding.status === 'Anfrage'
-                      ? 'bg-[#FBF4E0] text-[#8A6A30]'
-                      : 'bg-primary/10 text-primary'
-                  }`}>
+                  <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider flex-shrink-0 ml-2 ${WEDDING_STATUS_BADGE[wedding.status]}`}>
                     {wedding.status}
                   </span>
                 </div>
