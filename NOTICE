@@ -1,0 +1,11 @@
+WeddingKids PWA
+Copyright 2026 Aaron Penalver Höfler
+
+Der Quellcode steht unter der Apache License 2.0 (siehe LICENSE).
+
+Ausgenommen von der Lizenz sind der Name „WeddingKids“, das Logo und die
+App-Icons (public/wedding-kids-logo.svg, public/icon-192.png,
+public/icon-512.png), auch dort, wo sie in docs/screenshots/ zu sehen sind.
+Sie sind Kennzeichen des Unternehmens WeddingKids; alle Rechte daran bleiben
+vorbehalten (siehe auch Abschnitt 6 der Lizenz). Wer den Code weitergibt oder
+selbst betreibt, muss Name, Logo und Icons durch eigene ersetzen.

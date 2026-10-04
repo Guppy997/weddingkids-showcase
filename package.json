@@ -2,6 +2,7 @@
   "name": "weddingkids-pwa",
   "private": true,
   "version": "1.15.1",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "dev": "sh -c 'npm run dev:server & npm run dev:web'",
