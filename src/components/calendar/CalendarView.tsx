@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, List, Table } from 'lucide-react';
 import type { Wedding, AdminEvent } from '../../types';
-import { createMonthGrid, getDateKey, bucketEventsByDate } from './calendarUtils';
+import { createMonthGrid, getDateKey, parseDateKey, bucketEventsByDate } from './calendarUtils';
 import { useEventForm } from './useEventForm';
 import { CalendarListView } from './CalendarListView';
 import { EventForm } from './EventForm';
@@ -73,7 +73,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ weddings, events, on
     const bucket: Record<string, Wedding[]> = {};
 
     plannedWeddings.forEach((wedding) => {
-      const key = getDateKey(new Date(wedding.date));
+      const key = getDateKey(parseDateKey(wedding.date));
       if (!bucket[key]) {
         bucket[key] = [];
       }

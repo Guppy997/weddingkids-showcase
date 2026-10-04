@@ -10,6 +10,16 @@ export const getDateKey = (date: Date) => {
   return `${y}-${m}-${d}`;
 };
 
+/**
+ * "YYYY-MM-DD" als lokale Mitternacht. `new Date('2026-10-24')` liest den String
+ * als UTC — in Deutschland ist das 01:00/02:00 Uhr, und über die Zeitumstellung
+ * im Oktober verrutscht ein Tages-Cursor so um eine Stunde hinter das End-Datum.
+ */
+export const parseDateKey = (key: string) => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key);
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(key);
+};
+
 /** 6 Wochen à 7 Tage (Mo–So) rund um den Monat von `baseDate`. */
 export const createMonthGrid = (baseDate: Date) => {
   const firstDayOfMonth = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
@@ -36,8 +46,8 @@ export function bucketEventsByDate(events: AdminEvent[] | undefined, includePriv
   (events || []).forEach((ev) => {
     if (!ev) return;
     if (!includePrivate && !ev.public) return;
-    const start = new Date(ev.date);
-    const end = ev.endDate ? new Date(ev.endDate) : start;
+    const start = parseDateKey(ev.date);
+    const end = ev.endDate ? parseDateKey(ev.endDate) : start;
     // Sicherheits-Cap: max 60 Tage Span, falls jemand absurd lange Termine anlegt
     const maxIters = 60;
     let iter = 0;
