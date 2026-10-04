@@ -1,5 +1,7 @@
 # WeddingKids PWA
 
+[![CI](https://github.com/Guppy997/weddingkids-pwa/actions/workflows/ci.yml/badge.svg)](https://github.com/Guppy997/weddingkids-pwa/actions/workflows/ci.yml)
+
 Planungs-App für ein kleines Unternehmen, das **Kinderbetreuung auf Hochzeiten** anbietet. Das Team (2 Inhaberinnen, 14 Betreuer:innen) koordiniert darüber, wer bei welcher Hochzeit arbeitet: Anfragen kommen herein, alle melden ihre Verfügbarkeit, die Inhaberinnen teilen ein — und jede:r sieht die eigenen Einsätze im Kalender.
 
 Die App läuft seit Mai 2026 produktiv und wird im Alltag genutzt. Sie ist als **Progressive Web App** auf dem Handy installierbar, aktualisiert sich live und verschickt Push-Benachrichtigungen.
@@ -96,7 +98,7 @@ scripts/seed-demo.ts        Demo-Datenbank mit erfundenen Daten
 
 ## Lokal starten
 
-Voraussetzung: Node.js 20 oder neuer.
+Voraussetzung: Node.js 22 oder neuer.
 
 ```bash
 npm install
@@ -120,3 +122,9 @@ Weitere Befehle:
 ## Entwicklung
 
 Konzipiert, umgesetzt und betrieben von Aaron Penalver Höfler — von den Anforderungen im Gespräch mit dem Team über Architektur und Sicherheitskonzept bis zum Betrieb des Servers. Entwickelt mit KI-Unterstützung (Claude Code).
+
+Dieses Repository ist ein bereinigter Export des Produktivcodes: ohne echte Daten, Zugangsdaten und Server-Konfiguration. Die Entwicklungshistorie bleibt privat.
+
+## Lizenz
+
+Der Quellcode steht unter der [Apache License 2.0](LICENSE). Ausgenommen sind der Name „WeddingKids“, das Logo und die App-Icons. Sie sind Kennzeichen des Unternehmens und dürfen nicht weiterverwendet werden, Details in [`NOTICE`](NOTICE).
