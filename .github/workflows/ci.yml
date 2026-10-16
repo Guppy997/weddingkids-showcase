@@ -4,9 +4,16 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   test:
+    name: Typecheck, Tests und Build (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [22, 24]
     env:
       # Deutsche Zeitzone, damit Datumsfehler um die Zeitumstellung auffallen
       TZ: Europe/Berlin
@@ -14,8 +21,14 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: ${{ matrix.node }}
           cache: npm
-      - run: npm ci
-      - run: npm run typecheck
-      - run: npm test
+
+      - name: Installieren
+        run: npm ci
+      - name: TypeScript prüfen
+        run: npm run typecheck
+      - name: Testen
+        run: npm test
+      - name: Frontend bauen
+        run: npm run build
