@@ -59,21 +59,21 @@ const weddings: {
   status: 'Anfrage' | 'Gebucht' | 'Geplant' | 'Abgesagt'; children: number; staff: number;
   notes?: string; votes?: Vote[]; assigned?: string[];
 }[] = [
-  { id: 'demo-w1', couple: 'Clara & Felix', date: '2026-05-16', time: '15:00 Uhr - 23:00 Uhr; 8 Stunden', location: 'Schloss Weitenburg', status: 'Geplant', children: 9, staff: 2, assigned: ['demo-marie', 'demo-jonas'] },
-  { id: 'demo-w2', couple: 'Nina & David', date: '2026-06-20', time: '16:00 Uhr - 22:00 Uhr; 6 Stunden', location: 'Gut Mönchhof', status: 'Geplant', children: 6, staff: 2, assigned: ['demo-emma', 'demo-paul'] },
-  { id: 'demo-w3', couple: 'Sarah & Lukas', date: '2026-08-08', time: '14:00 Uhr - 22:00 Uhr; 8 Stunden', location: 'Hofgut Hohenkarpfen', status: 'Geplant', children: 12, staff: 3, assigned: ['demo-marie', 'demo-hannah', 'demo-finn'] },
+  { id: 'demo-w1', couple: 'Clara & Felix', date: '2026-05-16', time: '15:00 Uhr - 23:00 Uhr; 8 Stunden', location: 'Schloss Lindenhain', status: 'Geplant', children: 9, staff: 2, assigned: ['demo-marie', 'demo-jonas'] },
+  { id: 'demo-w2', couple: 'Nina & David', date: '2026-06-20', time: '16:00 Uhr - 22:00 Uhr; 6 Stunden', location: 'Gut Eichenhof', status: 'Geplant', children: 6, staff: 2, assigned: ['demo-emma', 'demo-paul'] },
+  { id: 'demo-w3', couple: 'Sarah & Lukas', date: '2026-08-08', time: '14:00 Uhr - 22:00 Uhr; 8 Stunden', location: 'Hofgut Sonnenhang', status: 'Geplant', children: 12, staff: 3, assigned: ['demo-marie', 'demo-hannah', 'demo-finn'] },
   { id: 'demo-w4', couple: 'Anna & Elias', date: '2026-09-05', time: '16:00 Uhr - 23:00 Uhr; 7 Stunden', location: 'Weingut am See', status: 'Abgesagt', children: 4, staff: 1 },
-  { id: 'demo-w5', couple: 'Laura & Max', date: '2026-10-17', time: '15:30 Uhr - 23:30 Uhr; 8 Stunden', location: 'Landgut Burg', status: 'Geplant', children: 10, staff: 2,
+  { id: 'demo-w5', couple: 'Laura & Max', date: '2026-10-17', time: '15:30 Uhr - 23:30 Uhr; 8 Stunden', location: 'Landgut Wiesental', status: 'Geplant', children: 10, staff: 2,
     notes: 'Zwei Kleinkinder unter 2 Jahren, Mittagsschlaf einplanen.',
     votes: [['demo-marie', 'Ja'], ['demo-jonas', 'Ja'], ['demo-emma', 'Nein', 'Bin auf einer anderen Feier']], assigned: ['demo-marie', 'demo-jonas'] },
   { id: 'demo-w6', couple: 'Mia & Ben', date: '2026-11-07', time: '16:00 Uhr - 00:00 Uhr; 8 Stunden', location: 'Alte Mühle', status: 'Gebucht', children: 8, staff: 2,
     votes: [['demo-paul', 'Ja'], ['demo-hannah', 'Vielleicht', 'Abends Termin, mittags 3 Std. möglich'], ['demo-finn', 'Ja'], ['demo-emma', 'Nein']] },
   { id: 'demo-w7', couple: 'Katharina & Jan', date: '2026-12-12', time: '15:00 Uhr - 21:00 Uhr; 6 Stunden', location: 'Hotel Krone', status: 'Anfrage', children: 5, staff: 1,
     votes: [['demo-jonas', 'Vielleicht', 'Hängt von meiner Prüfung ab']] },
-  { id: 'demo-w8', couple: 'Johanna & Moritz', date: '2027-04-24', time: '14:00 Uhr - 20:00 Uhr; 6 Stunden', location: 'Gartenhaus Rosenstein', status: 'Anfrage', children: 7, staff: 2 },
-  { id: 'demo-w9', couple: 'Theresa & Simon', date: '2027-05-22', time: '16:00 Uhr - 23:00 Uhr; 7 Stunden', location: 'Kloster Kirchberg', status: 'Anfrage', children: 11, staff: 3,
+  { id: 'demo-w8', couple: 'Johanna & Moritz', date: '2027-04-24', time: '14:00 Uhr - 20:00 Uhr; 6 Stunden', location: 'Gartenhaus Rosental', status: 'Anfrage', children: 7, staff: 2 },
+  { id: 'demo-w9', couple: 'Theresa & Simon', date: '2027-05-22', time: '16:00 Uhr - 23:00 Uhr; 7 Stunden', location: 'Kloster Talblick', status: 'Anfrage', children: 11, staff: 3,
     votes: [['demo-marie', 'Ja'], ['demo-paul', 'Ja', 'Gerne mit Bastelprogramm']] },
-  { id: 'demo-w10', couple: 'Carla & Leon', date: '2027-06-19', time: '15:00 Uhr - 23:00 Uhr; 8 Stunden', location: 'Seehaus Bodman', status: 'Gebucht', children: 9, staff: 2,
+  { id: 'demo-w10', couple: 'Carla & Leon', date: '2027-06-19', time: '15:00 Uhr - 23:00 Uhr; 8 Stunden', location: 'Seehaus am Ufer', status: 'Gebucht', children: 9, staff: 2,
     votes: [['demo-emma', 'Ja'], ['demo-finn', 'Ja']] },
 ];
 
