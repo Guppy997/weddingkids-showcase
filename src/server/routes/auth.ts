@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { randomUUID } from 'crypto';
 import { getDb } from '../database.js';
-import { hashPassword, comparePassword, generateToken } from '../lib/credentials.js';
+import { hashPassword, comparePassword, comparePasswordOrDummy, passwordError, generateToken } from '../lib/credentials.js';
 import { sendPushToUsers } from '../lib/push.js';
 import { authMiddleware, adminMiddleware, type AuthRequest } from '../middleware/auth.js';
 import { authLimiter } from '../middleware/rateLimit.js';
@@ -13,13 +13,16 @@ const router = Router();
 
 router.post('/api/auth/login', authLimiter, async (req: Request, res: Response) => {
   try {
-    const { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+    const { username, password } = req.body ?? {};
+    if (typeof username !== 'string' || typeof password !== 'string' || !username || !password) {
+      return res.status(400).json({ error: 'Username and password required' });
+    }
+    // Überlange Eingaben gar nicht erst hashen
+    if (username.length > 100 || password.length > 128) return res.status(401).json({ error: 'Invalid credentials' });
     const db = getDb();
     const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username) as UserRow | undefined;
-    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
-    const isValid = await comparePassword(password, user.password_hash);
-    if (!isValid) return res.status(401).json({ error: 'Invalid credentials' });
+    const isValid = await comparePasswordOrDummy(password, user?.password_hash);
+    if (!user || !isValid) return res.status(401).json({ error: 'Invalid credentials' });
     if (user.status === 'pending') return res.status(403).json({ error: 'Dein Account wartet noch auf Freigabe durch einen Admin.' });
     const token = generateToken({ userId: user.id, name: user.name, role: user.role, department: user.department });
     res.json({ token, user: { id: user.id, name: user.name, role: user.role, department: user.department, avatarColor: user.avatar_color ?? '#008080', avatarImage: user.avatar_image ?? null } });
@@ -31,8 +34,13 @@ router.post('/api/auth/login', authLimiter, async (req: Request, res: Response) 
 
 router.post('/api/auth/register', authLimiter, authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { username, password, name, department, role } = req.body;
+    const { username, password, name, department, role } = req.body ?? {};
     if (!username || !password || !name || !department) return res.status(400).json({ error: 'All fields required' });
+    if (typeof username !== 'string' || typeof name !== 'string' || typeof department !== 'string') {
+      return res.status(400).json({ error: 'All fields required' });
+    }
+    const pwErr = passwordError(password);
+    if (pwErr) return res.status(400).json({ error: pwErr });
     const db = getDb();
     if (db.prepare('SELECT id FROM users WHERE username = ?').get(username)) {
       return res.status(400).json({ error: 'Username already exists' });
@@ -51,7 +59,13 @@ router.post('/api/auth/register', authLimiter, authMiddleware, adminMiddleware, 
 router.post('/api/auth/verify', authMiddleware, (req: AuthRequest, res: Response) => {
   const db = getDb();
   const dbUser = db.prepare('SELECT avatar_color, avatar_image, name FROM users WHERE id = ?').get(req.user!.userId) as Pick<UserRow, 'avatar_color' | 'avatar_image' | 'name'> | undefined;
-  res.json({ valid: true, user: { ...req.user, avatarColor: dbUser?.avatar_color ?? '#008080', avatarImage: dbUser?.avatar_image ?? null, name: dbUser?.name ?? req.user!.name } });
+  // Frischer Token bei jedem App-Start: verlängert die 30 Tage und löst alte
+  // Tokens ohne Ablaufdatum unbemerkt ab.
+  res.json({
+    valid: true,
+    token: generateToken(req.user!),
+    user: { ...req.user, avatarColor: dbUser?.avatar_color ?? '#008080', avatarImage: dbUser?.avatar_image ?? null, name: dbUser?.name ?? req.user!.name },
+  });
 });
 
 router.patch('/api/auth/profile', authMiddleware, async (req: AuthRequest, res: Response) => {
@@ -87,16 +101,20 @@ router.patch('/api/auth/profile', authMiddleware, async (req: AuthRequest, res: 
 
 router.post('/api/auth/change-password', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { currentPassword, newPassword } = req.body;
-    if (!currentPassword || !newPassword) return res.status(400).json({ error: 'All fields required' });
-    if (newPassword.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    const { currentPassword, newPassword } = req.body ?? {};
+    if (typeof currentPassword !== 'string' || !currentPassword || !newPassword) return res.status(400).json({ error: 'All fields required' });
+    const pwErr = passwordError(newPassword);
+    if (pwErr) return res.status(400).json({ error: pwErr });
     const db = getDb();
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user!.userId) as UserRow;
-    if (!await comparePassword(currentPassword, user.password_hash)) {
+    if (currentPassword.length > 128 || !await comparePassword(currentPassword, user.password_hash)) {
       return res.status(401).json({ error: 'Current password is wrong' });
     }
-    db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(await hashPassword(newPassword), req.user!.userId);
-    res.json({ message: 'Password changed successfully' });
+    const hash = await hashPassword(newPassword);
+    db.prepare('UPDATE users SET password_hash = ?, password_changed_at = ? WHERE id = ?')
+      .run(hash, new Date().toISOString(), req.user!.userId);
+    // Alle anderen Geräte sind ab jetzt abgemeldet; dieses bekommt einen neuen Token.
+    res.json({ message: 'Password changed successfully', token: generateToken(req.user!) });
   } catch (error) {
     res.status(500).json({ error: 'Password change failed' });
   }
@@ -143,8 +161,10 @@ router.get('/api/auth/export-data', authMiddleware, (req: AuthRequest, res: Resp
 // ─── DSGVO: Konto-Löschung (Art. 17) ─────────────────────────────────────────
 router.delete('/api/auth/delete-account', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { password } = req.body;
-    if (!password) return res.status(400).json({ error: 'Passwort zur Bestätigung erforderlich' });
+    const { password } = req.body ?? {};
+    if (typeof password !== 'string' || !password || password.length > 128) {
+      return res.status(400).json({ error: 'Passwort zur Bestätigung erforderlich' });
+    }
     const db = getDb();
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user!.userId) as UserRow | undefined;
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -171,9 +191,19 @@ router.delete('/api/auth/delete-account', authMiddleware, async (req: AuthReques
 
 router.post('/api/auth/request-access', authLimiter, async (req: Request, res: Response) => {
   try {
-    const { username, password, name, department } = req.body;
-    if (!username || !password || !name) return res.status(400).json({ error: 'Alle Felder sind erforderlich' });
-    if (password.length < 8) return res.status(400).json({ error: 'Passwort muss mindestens 8 Zeichen haben' });
+    const { username, password, name, department } = req.body ?? {};
+    if (typeof username !== 'string' || typeof name !== 'string' || !username || !password || !name.trim()) {
+      return res.status(400).json({ error: 'Alle Felder sind erforderlich' });
+    }
+    if (department !== undefined && typeof department !== 'string') {
+      return res.status(400).json({ error: 'Alle Felder sind erforderlich' });
+    }
+    // Buchstaben (auch Umlaute), Ziffern, Punkt, Unterstrich, Bindestrich — keine Leer- oder Steuerzeichen
+    if (!/^[\p{L}\p{N}._-]{3,40}$/u.test(username)) {
+      return res.status(400).json({ error: 'Benutzername: 3–40 Zeichen, nur Buchstaben, Ziffern und . _ -' });
+    }
+    const pwErr = passwordError(password);
+    if (pwErr) return res.status(400).json({ error: pwErr });
     const db = getDb();
     if (db.prepare('SELECT id FROM users WHERE username = ?').get(username)) {
       return res.status(400).json({ error: 'Benutzername bereits vergeben' });

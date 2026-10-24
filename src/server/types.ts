@@ -12,6 +12,7 @@ export interface UserRow {
   status: 'active' | 'pending';
   avatar_color: string;
   avatar_image: string | null;
+  password_changed_at: string | null;
   created_at: string;
 }
 

@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { getDb } from '../database.js';
-import { verifyToken, type TokenPayload } from '../lib/credentials.js';
+import { verifyToken, issuedAtMs, type TokenPayload } from '../lib/credentials.js';
 import type { UserRow } from '../types.js';
 
 export interface AuthRequest extends Request {
@@ -16,9 +16,12 @@ export function resolveActiveUser(token: string | undefined): TokenPayload | nul
   const payload = verifyToken(token);
   if (!payload) return null;
   const dbUser = getDb().prepare(
-    'SELECT id, name, role, department, status FROM users WHERE id = ?'
-  ).get(payload.userId) as Pick<UserRow, 'id' | 'name' | 'role' | 'department' | 'status'> | undefined;
+    'SELECT id, name, role, department, status, password_changed_at FROM users WHERE id = ?'
+  ).get(payload.userId) as Pick<UserRow, 'id' | 'name' | 'role' | 'department' | 'status' | 'password_changed_at'> | undefined;
   if (!dbUser || dbUser.status !== 'active') return null;
+  // Nach einer Passwortänderung gelten nur noch Tokens, die danach ausgestellt
+  // wurden — so sind andere (z. B. verlorene) Geräte sofort abgemeldet.
+  if (dbUser.password_changed_at && issuedAtMs(payload) < Date.parse(dbUser.password_changed_at)) return null;
   return { userId: dbUser.id, name: dbUser.name, role: dbUser.role, department: dbUser.department };
 }
 

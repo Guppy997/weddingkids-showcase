@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { getDb } from '../database.js';
 import { logActivity } from '../lib/activityLog.js';
-import { hashPassword } from '../lib/credentials.js';
+import { hashPassword, passwordError } from '../lib/credentials.js';
 import { authMiddleware, adminMiddleware, type AuthRequest } from '../middleware/auth.js';
 import { broadcastUpdate } from '../lib/sse.js';
 import { HIDDEN_USER_IDS, PROTECTED_USER_IDS, NOT_HIDDEN_SQL } from '../config.js';
@@ -69,12 +69,8 @@ router.delete('/api/staff/:id', authMiddleware, adminMiddleware, (req: AuthReque
 router.post('/api/staff/:id/reset-password', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { newPassword } = req.body || {};
-    if (typeof newPassword !== 'string' || newPassword.length < 8) {
-      return res.status(400).json({ error: 'Passwort muss mindestens 8 Zeichen haben' });
-    }
-    if (newPassword.length > 128) {
-      return res.status(400).json({ error: 'Passwort zu lang (max 128 Zeichen)' });
-    }
+    const pwErr = passwordError(newPassword);
+    if (pwErr) return res.status(400).json({ error: pwErr });
     const db = getDb();
     const target = db.prepare('SELECT id, name, role FROM users WHERE id = ?').get(req.params.id) as Pick<UserRow, 'id' | 'name' | 'role'> | undefined;
     if (!target) return res.status(404).json({ error: 'Nutzer nicht gefunden' });
@@ -82,7 +78,9 @@ router.post('/api/staff/:id/reset-password', authMiddleware, adminMiddleware, as
       return res.status(403).json({ error: 'Admin-Passwörter können nicht über die App zurückgesetzt werden.' });
     }
     const hash = await hashPassword(newPassword);
-    db.prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hash, target.id);
+    // Zeitpunkt setzen → alle bisherigen Logins dieser Person sind abgemeldet
+    db.prepare('UPDATE users SET password_hash = ?, password_changed_at = ? WHERE id = ?')
+      .run(hash, new Date().toISOString(), target.id);
     logActivity(null, 'password_reset', `Passwort zurückgesetzt: ${target.name}`, req.user!.name);
     res.json({ message: 'Passwort zurückgesetzt' });
   } catch (err) {

@@ -15,7 +15,9 @@ async function request<T>(path: string, token: string, options?: RequestInit): P
   if (!res.ok) {
     // Token abgelaufen / ungültig → globalen Logout-Event feuern (AuthContext lauscht)
     if (res.status === 401) {
-      window.dispatchEvent(new CustomEvent('auth:expired'));
+      // Token mitgeben: ein 401 für einen inzwischen ersetzten Token (z. B. kurz
+      // nach einer Passwortänderung) darf das Gerät nicht abmelden.
+      window.dispatchEvent(new CustomEvent('auth:expired', { detail: { token } }));
     }
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error ?? 'Request failed');
@@ -39,7 +41,13 @@ export async function apiLogin(username: string, password: string) {
 }
 
 export async function apiVerifyToken(token: string) {
-  return request<{ valid: boolean; user: any }>('/api/auth/verify', token, { method: 'POST' });
+  // token: frischer 30-Tage-Token (ältere Server liefern keinen)
+  return request<{ valid: boolean; token?: string; user: any }>('/api/auth/verify', token, { method: 'POST' });
+}
+
+/** Einmal-Ticket für den Live-Stream (EventSource kann keinen Auth-Header senden). */
+export async function apiStreamTicket(token: string) {
+  return request<{ ticket: string }>('/api/stream/ticket', token, { method: 'POST' });
 }
 
 export async function apiRegisterUser(token: string, data: { username: string; password: string; name: string; department: string; role?: string }) {
@@ -60,7 +68,8 @@ export async function apiRequestAccess(data: { username: string; password: strin
 }
 
 export async function apiChangePassword(token: string, currentPassword: string, newPassword: string) {
-  return request('/api/auth/change-password', token, { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) });
+  // Nach der Änderung gilt der alte Token nicht mehr — der neue kommt in der Antwort
+  return request<{ message: string; token?: string }>('/api/auth/change-password', token, { method: 'POST', body: JSON.stringify({ currentPassword, newPassword }) });
 }
 
 export async function apiUpdateProfile(token: string, updates: { name?: string; avatarColor?: string; avatarImage?: string | null }) {
