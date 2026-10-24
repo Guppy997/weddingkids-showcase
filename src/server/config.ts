@@ -5,6 +5,8 @@ const idList = (value: string | undefined): string[] =>
   (value ?? '').split(',').map(s => s.trim()).filter(Boolean);
 
 export const PORT = Number(process.env.PORT) || 3001;
+// Nur lokal lauschen: nginx leitet /api/* an 127.0.0.1 weiter.
+export const HOST = process.env.HOST || '127.0.0.1';
 export const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
 
 // Versteckte System-Accounts (z. B. Wartungs-Admin, Test-Account): können sich

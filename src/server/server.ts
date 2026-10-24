@@ -5,13 +5,13 @@
 import 'dotenv/config';
 import { initializeDatabase, closeDatabase } from './database.js';
 import { createApp } from './app.js';
-import { PORT } from './config.js';
+import { PORT, HOST } from './config.js';
 
 function startServer() {
   try {
     if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET environment variable must be set');
     initializeDatabase();
-    const server = createApp().listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+    const server = createApp().listen(PORT, HOST, () => console.log(`✅ Server running on ${HOST}:${PORT}`));
     process.on('SIGTERM', () => server.close(() => { closeDatabase(); process.exit(0); }));
   } catch (error) {
     console.error('Failed to start server:', error);
