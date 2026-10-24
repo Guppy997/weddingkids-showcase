@@ -114,6 +114,9 @@ Die App verarbeitet personenbezogene Daten (Team, Hochzeitspaare, Kinderzahlen).
 
 - **Passwörter** nur als bcrypt-Hash (Kostenfaktor 12).
 - **Account-Prüfung bei jeder Anfrage:** Gelöschte oder nicht freigegebene Accounts verlieren sofort den Zugriff. Die Rolle kommt aus der Datenbank, nicht aus dem Token.
+- **Login-Tokens** laufen nach 30 Tagen ab und verlängern sich bei jeder Nutzung der App. Eine Passwortänderung meldet alle anderen Geräte ab.
+- **Live-Updates** öffnen die Verbindung mit einem Einmal-Ticket, das 60 Sekunden gilt. Der Login-Token steht nie in einer URL und landet so nicht in Server-Logs.
+- **Push-Abos** nur für die Push-Dienste der Browser. Eine eingetragene Adresse kann den Server nicht zu Anfragen ins interne Netz bringen.
 - **Rechte serverseitig:** Mitarbeitende können per API nur ihre eigene Rückmeldung ändern. Alles andere ist Admins vorbehalten, unabhängig davon, was die Oberfläche anzeigt.
 - **SQL** ausschließlich mit Platzhaltern, keine String-Verkettung von Eingaben.
 - **Rate-Limits** für Login und schreibende Anfragen, Längen-Limits für Textfelder.
@@ -121,7 +124,7 @@ Die App verarbeitet personenbezogene Daten (Team, Hochzeitspaare, Kinderzahlen).
 - **Betroffenenrechte:** Alle können ihre Daten selbst exportieren und ihr Konto löschen. Nur der letzte Admin muss vorher einen anderen bestimmen.
 - **Server:** Firewall, SSH nur per Schlüssel, fail2ban gegen Brute-Force.
 
-Die API-Tests in [`tests/`](tests/) prüfen genau diese Regeln, zum Beispiel „Tokens mit falschem Secret“, „gelöschte Mitarbeitende verlieren sofort den Zugriff“ oder „Mitarbeitende können nicht für andere abstimmen“.
+Die API-Tests in [`tests/`](tests/) prüfen genau diese Regeln, zum Beispiel „Tokens mit falschem Secret“, „gelöschte Mitarbeitende verlieren sofort den Zugriff“, „Mitarbeitende können nicht für andere abstimmen“ oder „ein Stream-Ticket gilt nur einmal“. Die CI bricht ab, sobald `npm audit` eine bekannte Lücke in den Server-Abhängigkeiten meldet.
 
 Sicherheitslücken bitte vertraulich melden, wie in [`SECURITY.md`](SECURITY.md) beschrieben.
 
