@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Wedding, Staff } from '../types';
 import { STATUS_COLUMNS } from '../constants';
 import { WeddingCard } from './WeddingCard';
+import { isWeddingOver } from '../lib/weddingDates';
 
 interface KanbanBoardProps {
   weddings: Wedding[];
@@ -19,15 +20,11 @@ type WeddingYear = typeof AVAILABLE_YEARS[number];
 export const KanbanBoard: React.FC<KanbanBoardProps> = ({ weddings, onWeddingClick, staff = [], currentUser }) => {
   const [year, setYear] = useState<WeddingYear>(2026);
   const getStatusLabel = (status: string) => (status === 'Anfrage' ? 'Anfragen' : status);
-  // Vergangene Hochzeiten (>1 Tag her) verschwinden aus dem Board für alle.
-  // Admins finden sie im Admin-Panel im aufklappbaren "Abgeschlossen"-Block.
-  // Abgesagte Hochzeiten bleiben sichtbar bis sie ebenfalls über das Datum
-  // hinaus sind, um schnellen Überblick zu behalten.
-  const oneDayMs = 24 * 60 * 60 * 1000;
-  const cutoff = Date.now() - oneDayMs;
-  const isCompleted = (w: Wedding) => new Date(w.date).getTime() < cutoff && w.status !== 'Abgesagt';
+  // Vergangene Hochzeiten (>1 Tag her) verschwinden aus dem Board für alle —
+  // auch abgesagte. Admins finden sie im Admin-Panel in den aufklappbaren
+  // Blöcken "Abgeschlossen" bzw. "Abgesagt"; gelöscht wird nichts.
   const weddingsForYear = weddings.filter(
-    w => new Date(w.date).getFullYear() === year && !isCompleted(w)
+    w => new Date(w.date).getFullYear() === year && !isWeddingOver(w)
   );
 
   return (

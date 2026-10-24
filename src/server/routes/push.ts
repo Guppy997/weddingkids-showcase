@@ -1,6 +1,6 @@
 import { Router, type Request, type Response } from 'express';
 import { getDb } from '../database.js';
-import { sendPushToUsers, getPublicKey, pushEnabled } from '../lib/push.js';
+import { sendPushToUsers, getPublicKey, pushEnabled, isAllowedPushEndpoint } from '../lib/push.js';
 import { authMiddleware, type AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
@@ -16,7 +16,8 @@ router.get('/api/push/public-key', (_req: Request, res: Response) => {
 router.post('/api/push/subscribe', authMiddleware, (req: AuthRequest, res: Response) => {
   try {
     const { endpoint, keys } = req.body || {};
-    if (!endpoint || !keys?.p256dh || !keys?.auth) {
+    const validKey = (k: unknown) => typeof k === 'string' && k.length > 0 && k.length <= 200;
+    if (!isAllowedPushEndpoint(endpoint) || !validKey(keys?.p256dh) || !validKey(keys?.auth)) {
       return res.status(400).json({ error: 'Invalid subscription payload' });
     }
     const userAgent = (req.headers['user-agent'] || '').slice(0, 200);

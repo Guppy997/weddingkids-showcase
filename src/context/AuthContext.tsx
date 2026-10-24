@@ -30,7 +30,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Globaler Auto-Logout, wenn API 401 zurückgibt (Token abgelaufen / ungültig)
   useEffect(() => {
-    const handleExpired = () => {
+    const handleExpired = (e: Event) => {
+      const failedToken = (e as CustomEvent<{ token?: string }>).detail?.token;
+      if (failedToken && failedToken !== localStorage.getItem('authToken')) return;
       setToken(null);
       setUser(null);
       localStorage.removeItem('authToken');
@@ -45,14 +47,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!storedToken) { setIsLoading(false); return; }
 
     apiVerifyToken(storedToken)
-      .then(({ user: u }) => {
+      .then(({ token: freshToken, user: u }) => {
         const authUser: AuthUser = {
           id: u.userId, name: u.name, role: u.role, department: u.department,
           avatarColor: u.avatarColor ?? '#008080',
           avatarImage: u.avatarImage ?? null,
         };
-        setToken(storedToken);
+        // Tokens laufen nach 30 Tagen ab; bei jedem Start gibt es einen frischen
+        const activeToken = freshToken ?? storedToken;
+        setToken(activeToken);
         setUser(authUser);
+        localStorage.setItem('authToken', activeToken);
         localStorage.setItem('authUser', JSON.stringify(authUser));
       })
       .catch(() => {
@@ -95,7 +100,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const changePassword = async (currentPassword: string, newPassword: string) => {
     if (!token) throw new Error('Not logged in');
-    await apiChangePassword(token, currentPassword, newPassword);
+    const { token: newToken } = await apiChangePassword(token, currentPassword, newPassword);
+    // Der alte Token ist nach der Änderung ungültig (andere Geräte werden abgemeldet)
+    if (newToken) {
+      setToken(newToken);
+      localStorage.setItem('authToken', newToken);
+    }
   };
 
   return (

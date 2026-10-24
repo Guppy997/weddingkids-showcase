@@ -26,6 +26,10 @@ jobs:
 
       - name: Installieren
         run: npm ci
+      # Nur was auf dem Server läuft (ohne Dev-Werkzeuge); einmal reicht
+      - name: Bekannte Sicherheitslücken
+        if: matrix.node == 24
+        run: npm audit --omit=dev --audit-level=moderate
       - name: TypeScript prüfen
         run: npm run typecheck
       - name: Testen

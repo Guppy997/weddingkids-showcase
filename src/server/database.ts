@@ -149,6 +149,9 @@ export function initializeDatabase(): void {
   try { db.exec(`ALTER TABLE events ADD COLUMN color TEXT`); } catch { /* exists */ }
   // Optionaler Kommentar zur eigenen Abstimmung (z. B. "kann nur mittags").
   try { db.exec(`ALTER TABLE assignments ADD COLUMN comment TEXT`); } catch { /* exists */ }
+  // Zeitpunkt der letzten Passwortänderung: ältere Tokens werden danach abgelehnt.
+  // Leer für alle bestehenden Accounts, bis sie ihr Passwort ändern.
+  try { db.exec(`ALTER TABLE users ADD COLUMN password_changed_at TEXT`); } catch { /* exists */ }
 
   // Migration: activity_log → wedding_id nullable + neue event_types erlauben.
   // Wir prüfen das durch einen Probe-Insert mit einem neuen event_type. Falls der

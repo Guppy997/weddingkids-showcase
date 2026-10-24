@@ -25,6 +25,25 @@ if (PUBLIC_KEY && PRIVATE_KEY) {
 export const pushEnabled = () => configured;
 export const getPublicKey = () => PUBLIC_KEY;
 
+// Der Server schickt an jede gespeicherte Endpoint-URL einen POST. Ohne diese
+// Liste könnte ein Account interne Adressen (127.0.0.1, LAN) eintragen und den
+// Server dorthin Anfragen schicken lassen (SSRF). Erlaubt sind nur die Push-
+// Dienste der Browser: Chrome/Edge-Chromium/Android (FCM), Firefox, Safari, Edge Legacy.
+const PUSH_HOSTS = [
+  /^fcm\.googleapis\.com$/,
+  /^updates\.push\.services\.mozilla\.com$/,
+  /(^|\.)push\.apple\.com$/,
+  /\.notify\.windows\.com$/,
+];
+
+export function isAllowedPushEndpoint(endpoint: unknown): endpoint is string {
+  if (typeof endpoint !== 'string' || endpoint.length > 1000) return false;
+  let url: URL;
+  try { url = new URL(endpoint); } catch { return false; }
+  if (url.protocol !== 'https:' || url.port !== '' || url.username || url.password) return false;
+  return PUSH_HOSTS.some(re => re.test(url.hostname));
+}
+
 export interface PushPayload {
   title: string;
   body: string;
@@ -59,6 +78,11 @@ export async function sendPushToUsers(userIds: string[], payload: PushPayload): 
   const removeSub = db.prepare('DELETE FROM push_subscriptions WHERE id = ?');
 
   await Promise.all(subs.map(async (sub) => {
+    // Altbestand aus der Zeit vor der Endpoint-Prüfung: nie an fremde Ziele senden
+    if (!isAllowedPushEndpoint(sub.endpoint)) {
+      removeSub.run(sub.id);
+      return;
+    }
     try {
       await webpush.sendNotification(
         {

@@ -13,11 +13,19 @@ export const USERS = {
   leaver:  { id: 'leaver-000-0000-0000-000000000000',   username: 'leaver1',  name: 'Lea Leaving',   role: 'Staff', status: 'active' },
   pending: { id: 'pending-00-0000-0000-000000000000',   username: 'pending1', name: 'Pia Pending',   role: 'Staff', status: 'pending' },
   hidden:  { id: HIDDEN_ID,                             username: 'hidden1',  name: 'Hidden System', role: 'Staff', status: 'active' },
+  // Eigene Accounts für Passwortänderung und Admin-Reset — die machen alte
+  // Tokens ungültig und dürfen die Tokens der anderen Tests nicht berühren.
+  pwchange: { id: 'pwchange-0-0000-0000-000000000000',  username: 'pwchange1', name: 'Paula Passwort', role: 'Staff', status: 'active' },
+  resetme:  { id: 'resetme-00-0000-0000-000000000000',  username: 'resetme1',  name: 'Rudi Reset',     role: 'Staff', status: 'active' },
 } as const;
 
-/** Signiert einen Token mit beliebigem Inhalt — für Manipulationstests. */
-export function signToken(payload: object, secret = TEST_SECRET): string {
-  return jwt.sign(payload, secret);
+/**
+ * Signiert einen Token mit beliebigem Inhalt — für Manipulationstests.
+ * Standardmäßig mit Ablauf, damit die Tests nach dem Übergangsstichtag für
+ * Tokens ohne exp weiter dasselbe prüfen.
+ */
+export function signToken(payload: object, secret = TEST_SECRET, options: jwt.SignOptions = { expiresIn: '1h' }): string {
+  return jwt.sign(payload, secret, options);
 }
 
 /** Kleiner fetch-Wrapper gegen den Test-Server. */

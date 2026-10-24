@@ -21,7 +21,7 @@ import {
   apiGetNotes, apiCreateNote, apiDeleteNote,
   apiGetPolls, apiCreatePoll, apiDeletePoll, apiVotePoll,
   apiGetEvents, apiCreateEvent, apiUpdateEvent, apiDeleteEvent,
-  apiGetStaff,
+  apiGetStaff, apiStreamTicket,
 } from './api';
 
 // ── localStorage key for "last seen" timestamps per tab ──
@@ -159,10 +159,32 @@ export default function App() {
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
     // ── SSE: sofortige Updates wenn Verbindung steht ──
+    // Verbindung per Einmal-Ticket statt Token in der URL. Weil ein Ticket nur
+    // einmal gilt, wird nach einem Abbruch selbst neu verbunden (mit neuem Ticket)
+    // statt über das eingebaute Reconnect von EventSource.
     let es: EventSource | null = null;
-    const connectSSE = () => {
+    let cancelled = false;
+    let attempt = 0;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    const connectSSE = async () => {
+      clearTimeout(retry);
       es?.close();
-      es = new EventSource(`${API_URL}/api/stream?token=${token}`);
+      es = null;
+      const current = ++attempt;
+      let ticket: string;
+      try {
+        ({ ticket } = await apiStreamTicket(token));
+      } catch {
+        return; // Polling läuft weiter; nächster Versuch bei focus/visibilitychange
+      }
+      // focus und visibilitychange feuern oft gleichzeitig — nur der letzte Versuch verbindet
+      if (cancelled || current !== attempt) return;
+      es = new EventSource(`${API_URL}/api/stream?ticket=${encodeURIComponent(ticket)}`);
+      es.onerror = () => {
+        es?.close();
+        es = null;
+        if (!cancelled) retry = setTimeout(connectSSE, 10_000);
+      };
       es.onmessage = (e) => {
         try {
           const { type } = JSON.parse(e.data);
@@ -203,6 +225,8 @@ export default function App() {
     window.addEventListener('focus', handleVisible);
 
     return () => {
+      cancelled = true;
+      clearTimeout(retry);
       es?.close();
       clearInterval(poll);
       document.removeEventListener('visibilitychange', handleVisible);
