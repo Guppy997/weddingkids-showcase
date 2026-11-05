@@ -55,7 +55,7 @@ db.prepare(
 
 type Vote = [staffId: string, status: 'Ja' | 'Nein' | 'Vielleicht', comment?: string];
 const weddings: {
-  id: string; couple: string; date: string; time: string; location: string;
+  id: string; couple: string; date: string; endDate?: string; time: string; location: string;
   status: 'Anfrage' | 'Gebucht' | 'Geplant' | 'Abgesagt'; children: number; staff: number;
   notes?: string; votes?: Vote[]; assigned?: string[];
 }[] = [
@@ -75,11 +75,14 @@ const weddings: {
     votes: [['demo-marie', 'Ja'], ['demo-paul', 'Ja', 'Gerne mit Bastelprogramm']] },
   { id: 'demo-w10', couple: 'Carla & Leon', date: '2027-06-19', time: '15:00 Uhr - 23:00 Uhr; 8 Stunden', location: 'Seehaus am Ufer', status: 'Gebucht', children: 9, staff: 2,
     votes: [['demo-emma', 'Ja'], ['demo-finn', 'Ja']] },
+  // Mehrtägig: Betreuung über ein ganzes Hochzeitswochenende (Fr–So)
+  { id: 'demo-w11', couple: 'Ronja & Tim', date: '2027-07-09', endDate: '2027-07-11', time: '16:00 Uhr - 14:00 Uhr', location: 'Gutshof Birkenau', status: 'Anfrage', children: 6, staff: 2,
+    notes: 'Freitag Polterabend, Samstag Trauung, Sonntag Brunch', votes: [['demo-marie', 'Vielleicht', 'nur Samstag und Sonntag']] },
 ];
 
 const insertWedding = db.prepare(
-  `INSERT INTO weddings (id, couple_names, initials, date, betreuungszeit, location, status, children_count, staff_needed, notes)
-   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+  `INSERT INTO weddings (id, couple_names, initials, date, end_date, betreuungszeit, location, status, children_count, staff_needed, notes)
+   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 );
 const insertVote = db.prepare(
   `INSERT INTO assignments (wedding_id, staff_id, status, assigned, comment) VALUES (?, ?, ?, ?, ?)
@@ -87,7 +90,7 @@ const insertVote = db.prepare(
 );
 for (const w of weddings) {
   const initials = w.couple.split('&').map(n => n.trim()[0]).join('&');
-  insertWedding.run(w.id, w.couple, initials, w.date, w.time, w.location, w.status, w.children, w.staff, w.notes ?? '');
+  insertWedding.run(w.id, w.couple, initials, w.date, w.endDate ?? null, w.time, w.location, w.status, w.children, w.staff, w.notes ?? '');
   for (const [staffId, status, comment] of w.votes ?? []) insertVote.run(w.id, staffId, status, 0, comment ?? null);
   for (const staffId of w.assigned ?? []) insertVote.run(w.id, staffId, 'Ja', 1, null);
 }

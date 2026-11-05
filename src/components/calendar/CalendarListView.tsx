@@ -3,6 +3,8 @@ import { ChevronDown, ChevronUp, Heart } from 'lucide-react';
 import type { Wedding } from '../../types';
 import { WeddingInfoBlock } from '../WeddingInfoBlock';
 import { WEDDING_STATUS_BADGE } from '../../lib/status';
+import { parseDateKey } from './calendarUtils';
+import { isMultiDayWedding, weddingLastDay } from '../../lib/weddingDates';
 
 interface CalendarListViewProps {
   sorted: Wedding[];
@@ -22,7 +24,11 @@ export const CalendarListView: React.FC<CalendarListViewProps> = ({
 
   // Shared card renderer — eingeklappt: nur Datum + Status, Tap erweitert
   const renderCard = (wedding: Wedding, mine: boolean) => {
-    const d = new Date(wedding.date);
+    const d = parseDateKey(wedding.date);
+    // Mehrtägig: "10.–12." bzw. über den Monatswechsel "30.–2." (Monat vom Start)
+    const dayLabel = isMultiDayWedding(wedding)
+      ? `${d.getDate()}.–${parseDateKey(weddingLastDay(wedding)).getDate()}.`
+      : String(d.getDate());
     const statusClass = WEDDING_STATUS_BADGE[wedding.status];
     const isExpanded = expandedWeddingId === wedding.id;
     return (
@@ -38,7 +44,7 @@ export const CalendarListView: React.FC<CalendarListViewProps> = ({
         >
           {/* Date block */}
           <div className={`min-w-[42px] flex flex-col items-center justify-center mr-3 ${mine ? 'text-primary' : 'text-gray-500'}`}>
-            <span className="font-black text-lg leading-none">{d.getDate()}</span>
+            <span className={`font-black leading-none whitespace-nowrap ${dayLabel.length > 2 ? 'text-sm' : 'text-lg'}`}>{dayLabel}</span>
             <span className="text-[10px] font-bold uppercase">{d.toLocaleDateString('de-DE', { month: 'short' })}</span>
           </div>
 

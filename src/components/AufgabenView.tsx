@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { Wedding, ActivityLogEntry, DashboardStats } from '../types';
 import { apiGetDashboard, apiGetGlobalActivity, apiGetPendingStaff } from '../api';
+import { formatWeddingDateRange } from '../lib/weddingDates';
 
 interface AufgabenViewProps {
   weddings: Wedding[];
@@ -263,7 +264,7 @@ export const AufgabenView: React.FC<AufgabenViewProps> = ({ weddings, token, onN
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-gray-800 truncate">{w.coupleNames}</p>
                           <p className="text-xs text-gray-500 truncate">
-                            {new Date(w.date).toLocaleDateString('de-DE')} · {w.location}
+                            {formatWeddingDateRange(w)} · {w.location}
                           </p>
                         </div>
                         <button

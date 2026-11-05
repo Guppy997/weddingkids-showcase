@@ -283,6 +283,7 @@ export default function App() {
         coupleNames: newWedding.coupleNames,
         initials: newWedding.initials,
         date: newWedding.date,
+        endDate: newWedding.endDate,
         betreuungszeit: newWedding.betreuungszeit,
         location: newWedding.location,
         status: newWedding.status,

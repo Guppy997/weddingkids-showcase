@@ -152,6 +152,9 @@ export function initializeDatabase(): void {
   // Zeitpunkt der letzten Passwortänderung: ältere Tokens werden danach abgelehnt.
   // Leer für alle bestehenden Accounts, bis sie ihr Passwort ändern.
   try { db.exec(`ALTER TABLE users ADD COLUMN password_changed_at TEXT`); } catch { /* exists */ }
+  // Hochzeiten: optionales End-Datum für mehrtägige Betreuungen (z. B. ein ganzes
+  // Wochenende). Leer = eintägig wie bisher.
+  try { db.exec(`ALTER TABLE weddings ADD COLUMN end_date TEXT`); } catch { /* exists */ }
 
   // Migration: activity_log → wedding_id nullable + neue event_types erlauben.
   // Wir prüfen das durch einen Probe-Insert mit einem neuen event_type. Falls der

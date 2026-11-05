@@ -4,7 +4,8 @@ import type { Wedding, ProjectStatus } from '../../types';
 import type { StaffMember, WeddingSection } from './types';
 import { emptyWeddingForm } from './types';
 import { parseBetreuungszeit, buildBetreuungszeit } from './betreuungszeit';
-import { WeddingForm } from './WeddingForm';
+import { WeddingForm, endDateValid } from './WeddingForm';
+import { isWeddingOver, isMultiDayWedding } from '../../lib/weddingDates';
 import { AdminWeddingCard } from './AdminWeddingCard';
 
 interface WeddingsTabProps {
@@ -49,6 +50,8 @@ export const WeddingsTab: React.FC<WeddingsTabProps> = ({
       startTime: parsed.start,
       endTime: parsed.end,
       date: wedding.date,
+      multiDay: isMultiDayWedding(wedding),
+      endDate: isMultiDayWedding(wedding) ? wedding.endDate ?? '' : '',
       location: wedding.location,
       status: wedding.status,
       childrenCount: wedding.childrenCount > 0 ? String(wedding.childrenCount) : '',
@@ -73,9 +76,14 @@ export const WeddingsTab: React.FC<WeddingsTabProps> = ({
   const handleSaveWedding = (e: React.FormEvent) => {
     e.preventDefault();
     onError(''); onSuccess('');
+    if (!endDateValid(weddingForm)) {
+      onError('End-Datum muss nach dem Start-Datum liegen.');
+      return;
+    }
+    const endDate = weddingForm.multiDay && weddingForm.endDate ? weddingForm.endDate : null;
     const childrenCount = parseInt(weddingForm.childrenCount) || 0;
     const staffNeeded = parseInt(weddingForm.staffNeeded) || 0;
-    const betreuungszeit = buildBetreuungszeit(weddingForm.startTime, weddingForm.endTime);
+    const betreuungszeit = buildBetreuungszeit(weddingForm.startTime, weddingForm.endTime, !endDate);
     try {
       if (editingWedding) {
         onUpdateWedding?.(editingWedding.id, {
@@ -83,6 +91,7 @@ export const WeddingsTab: React.FC<WeddingsTabProps> = ({
           initials: weddingForm.coupleNames.split('&').map(n => n.trim()[0]).join('&'),
           betreuungszeit,
           date: weddingForm.date,
+          endDate,
           location: weddingForm.location,
           childrenCount,
           staffNeeded,
@@ -97,6 +106,7 @@ export const WeddingsTab: React.FC<WeddingsTabProps> = ({
           initials: weddingForm.coupleNames.split('&').map(n => n.trim()[0]).join('&'),
           betreuungszeit,
           date: weddingForm.date,
+          endDate,
           location: weddingForm.location,
           status: weddingForm.status,
           childrenCount,
@@ -130,10 +140,8 @@ export const WeddingsTab: React.FC<WeddingsTabProps> = ({
   // Hochzeiten des gewählten Jahres in die drei Sektionen aufteilen
   // Hochzeiten des gewählten Jahres
   const weddingsForYear = weddings.filter(w => new Date(w.date).getFullYear() === year);
-  // "Abgeschlossen" = Datum >1 Tag in der Vergangenheit UND nicht abgesagt
-  const oneDayMs = 24 * 60 * 60 * 1000;
-  const cutoff = Date.now() - oneDayMs;
-  const isCompleted = (w: Wedding) => new Date(w.date).getTime() < cutoff && w.status !== 'Abgesagt';
+  // "Abgeschlossen" = (letzter) Tag >1 Tag in der Vergangenheit UND nicht abgesagt
+  const isCompleted = (w: Wedding) => isWeddingOver(w) && w.status !== 'Abgesagt';
 
   // Aktiv: STATUS_COLUMNS außer Abgesagt, Datum nicht abgeschlossen
   // Reihenfolge im Admin-Panel: Anfragen → Gebucht → Geplant

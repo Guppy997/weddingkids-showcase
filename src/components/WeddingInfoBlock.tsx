@@ -1,6 +1,7 @@
 import React from 'react';
 import { Calendar as CalendarIcon, MapPin, Clock, Baby, Users } from 'lucide-react';
 import { Wedding } from '../types';
+import { formatWeddingDateRange } from '../lib/weddingDates';
 
 interface Props {
   wedding: Wedding;
@@ -23,7 +24,7 @@ export const WeddingInfoBlock: React.FC<Props> = ({ wedding, size = 'compact' })
     <div className={`${gap}`}>
       <div className={`flex items-center ${text} text-gray-500`}>
         <CalendarIcon size={iconSize} className="mr-1.5 shrink-0" />
-        {new Date(wedding.date).toLocaleDateString('de-DE', {
+        {formatWeddingDateRange(wedding, {
           weekday: 'short',
           day: '2-digit',
           month: '2-digit',

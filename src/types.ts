@@ -27,7 +27,8 @@ export interface Wedding {
   id: string;
   coupleNames: string;
   initials: string;
-  date: string;
+  date: string; // YYYY-MM-DD (Start-Datum)
+  endDate?: string | null; // YYYY-MM-DD, nur bei mehrtägigen Betreuungen
   betreuungszeit?: string;
   location: string;
   status: ProjectStatus;

@@ -32,4 +32,8 @@ describe('Betreuungszeit', () => {
     expect(parseBetreuungszeit('')).toEqual({ start: '', end: '' });
     expect(buildBetreuungszeit('', '13:00')).toBe('');
   });
+
+  it('mehrtägig: nur Beginn und Ende, keine Stundenzahl', () => {
+    expect(buildBetreuungszeit('16:00', '14:00', false)).toBe('16:00 Uhr - 14:00 Uhr');
+  });
 });
