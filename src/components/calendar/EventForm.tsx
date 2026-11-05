@@ -2,6 +2,7 @@ import React from 'react';
 import { X } from 'lucide-react';
 import type { AdminEvent } from '../../types';
 import type { EventFormState } from './useEventForm';
+import { suggestEndDate } from './calendarUtils';
 
 // Pastell-Palette aus dem bestehenden App-Design
 const EVENT_COLORS = [
@@ -62,7 +63,10 @@ export const EventForm: React.FC<EventFormProps> = ({ form, update, close, onAdd
         <input
           type="date"
           value={form.date}
-          onChange={(e) => update({ date: e.target.value })}
+          onChange={(e) => update({
+            date: e.target.value,
+            ...(form.multiDay ? { endDate: suggestEndDate(e.target.value, form.endDate) } : {}),
+          })}
           className={inputCls}
         />
         {form.multiDay ? (
@@ -89,7 +93,7 @@ export const EventForm: React.FC<EventFormProps> = ({ form, update, close, onAdd
         ) : (
           <button
             type="button"
-            onClick={() => update({ multiDay: true })}
+            onClick={() => update({ multiDay: true, endDate: suggestEndDate(form.date, form.endDate) })}
             className="text-xs font-bold text-primary mt-2 inline-flex items-center gap-1"
           >
             + Mehrere Tage

@@ -7,7 +7,7 @@
 ![Node 22.12+](https://img.shields.io/badge/Node-22.12%2B-008080)
 ![SQLite](https://img.shields.io/badge/SQLite-WAL-008080)
 ![PWA](https://img.shields.io/badge/PWA-installierbar-008080)
-![95 Tests](https://img.shields.io/badge/Tests-95-008080)
+![98 Tests](https://img.shields.io/badge/Tests-98-008080)
 
 > **In short (English):** A scheduling app for a small company that provides childcare at weddings. Requests come in, the team reports availability, the owners assign staff, and everyone sees their own shifts in a calendar, with live updates and web push. In production since May 2026. This repository is a cleaned-up export with made-up demo data; the interface is in German.
 
@@ -25,7 +25,7 @@
   </tr>
 </table>
 
-<sub>Screenshots mit Demo-Daten (siehe <a href="#demo-daten">Demo-Daten</a>), alle Namen und Orte sind erfunden. Aktuelle Version: 1.18.0.</sub>
+<sub>Screenshots mit Demo-Daten (siehe <a href="#demo-daten">Demo-Daten</a>), alle Namen und Orte sind erfunden. Aktuelle Version: 1.18.1.</sub>
 
 ## Inhalt
 
@@ -72,7 +72,7 @@ flowchart LR
 - **Profil:** Passwort ändern, Datenexport und Konto-Löschung (DSGVO Art. 17 und 20).
 
 **Für die Inhaberinnen (Admin)**
-- **Hochzeiten** anlegen, bearbeiten und durch die Status führen, Rückmeldungen sehen und Personal fest einteilen. Standard ist ein Tag; der Haken „Mehrere Tage“ neben dem Datum blendet ein Bis-Datum ein.
+- **Hochzeiten** anlegen, bearbeiten und durch die Status führen, Rückmeldungen sehen und Personal fest einteilen. Standard ist ein Tag; der Haken „Mehrere Tage“ neben dem Datum blendet ein Bis-Datum ein, vorbelegt mit dem Folgetag. Eine eingetragene Betreuungszeit lässt sich mit „Zeit entfernen“ wieder löschen.
 - **Team:** neue Mitarbeitende freigeben, Team verwalten, Passwörter zurücksetzen.
 - **Organisation:** Aufgaben pro Hochzeit, Aktivitätsprotokoll, News, Abstimmungen und Termine.
 
@@ -161,7 +161,7 @@ Andere Adressen oder Chrome-Pfad über `APP_URL`, `API_URL` bzw. `CHROME_PATH`. 
 npm test
 ```
 
-95 Tests mit Vitest in acht Dateien:
+98 Tests mit Vitest in acht Dateien:
 - **API-Tests** gegen einen echten Server-Prozess mit eigener Test-Datenbank: Login, Token-Prüfung und -Ablauf, Passwortänderung, gelöschte und nicht freigegebene Accounts, Rechte von Admins und Mitarbeitenden, mehrtägige Hochzeiten, geschützte und versteckte Accounts, Aktivitätsprotokoll, Live-Stream per Einmal-Ticket, Push-Abos.
 - **Unit-Tests** für Betreuungszeiten, das Kalender-Raster mit mehrtägigen Zeiträumen, Datum und Zeitraum einer Hochzeit, Stream-Tickets und die Push-Benachrichtigungen nach Änderungen an einer Hochzeit.
 
@@ -180,7 +180,7 @@ Die CI auf GitHub Actions prüft bei jedem Push und Pull Request Typen, Tests un
 
 ## Releases und Versionen
 
-Dieser Showcase zeigt den Stand von Version **1.18.0**. Die Versionsnummer steht in `package.json` und erscheint in der App im Profil. Der Versionsverlauf und die Entwicklungshistorie liegen im privaten Produktiv-Repository.
+Dieser Showcase zeigt den Stand von Version **1.18.1**. Die Versionsnummer steht in `package.json` und erscheint in der App im Profil. Der Versionsverlauf und die Entwicklungshistorie liegen im privaten Produktiv-Repository.
 
 ## Projektstruktur
 

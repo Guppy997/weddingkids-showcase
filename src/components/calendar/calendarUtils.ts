@@ -20,6 +20,19 @@ export const parseDateKey = (key: string) => {
   return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : new Date(key);
 };
 
+/**
+ * Vorschlag fürs Bis-Datum bei „Mehrere Tage“: ein späteres Bis bleibt, sonst
+ * der Tag nach „Von“. Ein leeres Datumsfeld öffnet auf dem Handy bei „heute“ —
+ * vorbelegt springt die Auswahl direkt in die richtige Woche.
+ */
+export function suggestEndDate(date: string, endDate: string): string {
+  if (!date) return endDate;
+  if (endDate && endDate > date) return endDate;
+  const next = parseDateKey(date);
+  next.setDate(next.getDate() + 1);
+  return getDateKey(next);
+}
+
 /** 6 Wochen à 7 Tage (Mo–So) rund um den Monat von `baseDate`. */
 export const createMonthGrid = (baseDate: Date) => {
   const firstDayOfMonth = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
