@@ -2,6 +2,7 @@ import { getDb } from '../database.js';
 import { sendPushToUsers } from './push.js';
 import type { TokenPayload } from './credentials.js';
 import type { AssignmentRow } from '../types.js';
+import { formatWeddingDateDE } from './dates.js';
 
 /**
  * Push-Benachrichtigungen nach einer Hochzeits-Änderung (PATCH /api/weddings/:id):
@@ -18,7 +19,7 @@ export interface WeddingChanges {
 }
 
 export function notifyWeddingUpdate({ wedding, changes, actor, previousStatus, previouslyAssigned }: {
-  wedding: { id: string; coupleNames: string; date: string; location: string };
+  wedding: { id: string; coupleNames: string; date: string; endDate?: string | null; location: string };
   changes: WeddingChanges;
   actor: TokenPayload;
   previousStatus: string;
@@ -26,11 +27,7 @@ export function notifyWeddingUpdate({ wedding, changes, actor, previousStatus, p
 }) {
   const db = getDb();
   try {
-    // "YYYY-MM-DD" wird als UTC-Mitternacht gelesen → auch in UTC formatieren,
-    // sonst zeigt ein Server westlich von UTC den Vortag an.
-    const dateStr = new Date(wedding.date).toLocaleDateString('de-DE', {
-      day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
-    });
+    const dateStr = formatWeddingDateDE(wedding.date, wedding.endDate);
     const actorId = actor.userId;
 
     // Hilfsfunktion: alle aktiven Admin-IDs holen (für Mit-Info bei wichtigen Events).

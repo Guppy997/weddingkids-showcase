@@ -18,6 +18,8 @@ export type WeddingSection = 'active' | 'cancelled' | 'completed';
 // Formular-Zustand „Hochzeit anlegen/bearbeiten“ (Zahlen als Strings, weil Eingabefelder)
 export const emptyWeddingForm = {
   coupleNames: '', betreuungszeit: '', startTime: '', endTime: '', date: '', location: '',
+  // Mehrtägig (selten): Haken „Mehrere Tage“ blendet das Bis-Datum ein
+  multiDay: false, endDate: '',
   status: 'Anfrage' as ProjectStatus, childrenCount: '', staffNeeded: '', notes: '',
   assignedStaffIds: [] as string[],
 };

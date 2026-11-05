@@ -16,6 +16,10 @@ interface WeddingFormProps {
   closeWeddingForm: () => void;
 }
 
+/** Bis-Datum gesetzt und nach dem Start (nur relevant, wenn „Mehrere Tage“ angehakt). */
+export const endDateValid = (f: WeddingFormState) =>
+  !f.multiDay || (!!f.endDate && (!f.date || f.endDate > f.date));
+
 /** Formular „Hochzeit anlegen / bearbeiten“ inkl. Betreuungszeit und direkter Einteilung. */
 export const WeddingForm: React.FC<WeddingFormProps> = ({
   weddingForm, setWeddingForm, editingWedding, staffProp, handleSaveWedding, closeWeddingForm,
@@ -30,8 +34,28 @@ export const WeddingForm: React.FC<WeddingFormProps> = ({
       <div><label className={labelClass}>Paar / Veranstalter</label>
         <input type="text" value={weddingForm.coupleNames} onChange={e => setWeddingForm({ ...weddingForm, coupleNames: e.target.value })}
           placeholder="z.B. Anna & Bernd" required className={inputClass} /></div>
-      <div><label className={labelClass}>Datum</label>
-        <input type="date" value={weddingForm.date} onChange={e => setWeddingForm({ ...weddingForm, date: e.target.value })} required className={inputClass} /></div>
+      <div>
+        <div className="flex items-center justify-between">
+          <label className={labelClass}>{weddingForm.multiDay ? 'Von' : 'Datum'}</label>
+          <label className="flex items-center gap-1.5 text-xs text-gray-500 mb-2 cursor-pointer select-none">
+            <input type="checkbox" checked={weddingForm.multiDay}
+              onChange={e => setWeddingForm({ ...weddingForm, multiDay: e.target.checked, endDate: e.target.checked ? weddingForm.endDate : '' })}
+              className="w-4 h-4 accent-primary" />
+            Mehrere Tage
+          </label>
+        </div>
+        <input type="date" value={weddingForm.date} onChange={e => setWeddingForm({ ...weddingForm, date: e.target.value })} required className={inputClass} />
+        {weddingForm.multiDay && (
+          <div className="mt-3">
+            <label className={labelClass}>Bis</label>
+            <input type="date" value={weddingForm.endDate} min={weddingForm.date || undefined}
+              onChange={e => setWeddingForm({ ...weddingForm, endDate: e.target.value })} required className={inputClass} />
+            {!endDateValid(weddingForm) && (
+              <p className="text-xs text-status-red-text mt-2">End-Datum muss nach dem Start-Datum liegen.</p>
+            )}
+          </div>
+        )}
+      </div>
       <div>
         <label className={labelClass}>Betreuungszeit</label>
         <div className="grid grid-cols-2 gap-2">
@@ -48,7 +72,8 @@ export const WeddingForm: React.FC<WeddingFormProps> = ({
               className={inputClass} />
           </div>
         </div>
-        {weddingForm.startTime && weddingForm.endTime && (() => {
+        {/* Bei mehreren Tagen: Beginn am ersten, Ende am letzten Tag — keine Dauer-Rechnung */}
+        {!weddingForm.multiDay && weddingForm.startTime && weddingForm.endTime && (() => {
           const h = calculateHours(weddingForm.startTime, weddingForm.endTime);
           return h > 0 ? (
             <p className="text-xs text-primary font-bold mt-2">

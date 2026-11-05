@@ -29,10 +29,14 @@ export function formatHours(h: number): string {
   return `${display} ${h === 1 ? 'Stunde' : 'Stunden'}`;
 }
 
-/** Setzt die finale Speicher-Form zusammen, oder leerer String wenn keine Zeit gewählt. */
-export function buildBetreuungszeit(start: string, end: string): string {
+/**
+ * Setzt die finale Speicher-Form zusammen, oder leerer String wenn keine Zeit gewählt.
+ * `withHours = false` bei mehrtägigen Betreuungen: Beginn am ersten, Ende am letzten
+ * Tag — eine Stundenzahl daraus wäre falsch.
+ */
+export function buildBetreuungszeit(start: string, end: string, withHours = true): string {
   if (!start || !end) return '';
-  const h = calculateHours(start, end);
+  const h = withHours ? calculateHours(start, end) : 0;
   return h > 0
     ? `${start} Uhr - ${end} Uhr; ${formatHours(h)}`
     : `${start} Uhr - ${end} Uhr`;

@@ -7,7 +7,7 @@
 ![Node 22.12+](https://img.shields.io/badge/Node-22.12%2B-008080)
 ![SQLite](https://img.shields.io/badge/SQLite-WAL-008080)
 ![PWA](https://img.shields.io/badge/PWA-installierbar-008080)
-![46 Tests](https://img.shields.io/badge/Tests-46-008080)
+![95 Tests](https://img.shields.io/badge/Tests-95-008080)
 
 > **In short (English):** A scheduling app for a small company that provides childcare at weddings. Requests come in, the team reports availability, the owners assign staff, and everyone sees their own shifts in a calendar, with live updates and web push. In production since May 2026. This repository is a cleaned-up export with made-up demo data; the interface is in German.
 
@@ -25,7 +25,7 @@
   </tr>
 </table>
 
-<sub>Screenshots mit Demo-Daten (siehe <a href="#demo-daten">Demo-Daten</a>), alle Namen und Orte sind erfunden. Aktuelle Version: 1.15.1.</sub>
+<sub>Screenshots mit Demo-Daten (siehe <a href="#demo-daten">Demo-Daten</a>), alle Namen und Orte sind erfunden. Aktuelle Version: 1.18.0.</sub>
 
 ## Inhalt
 
@@ -58,7 +58,7 @@ flowchart LR
   C -. "Push" .-> D
 ```
 
-1. **Anfrage:** Eine Inhaberin legt die Hochzeit mit Datum, Ort, Betreuungszeit und Kinderzahl an. Das Team bekommt eine Push-Benachrichtigung.
+1. **Anfrage:** Eine Inhaberin legt die Hochzeit mit Datum, Ort, Betreuungszeit und Kinderzahl an. Meist ist das ein einzelner Tag, bei Bedarf auch ein Zeitraum über mehrere Tage, zum Beispiel ein ganzes Hochzeitswochenende. Das Team bekommt eine Push-Benachrichtigung.
 2. **Rückmeldung:** Alle melden mit *Ja*, *Nein* oder *Vielleicht*, ob sie können, auf Wunsch mit Kommentar.
 3. **Einteilung:** Die Inhaberinnen sehen alle Rückmeldungen auf einen Blick, teilen fest ein und führen die Hochzeit von *Anfrage* über *Gebucht* bis *Geplant*. Eingeteilte sehen den Einsatz in ihrem Kalender und werden über Änderungen benachrichtigt.
 
@@ -67,12 +67,12 @@ flowchart LR
 **Für das Team**
 - **Anfragen** mit *Ja / Nein / Vielleicht* beantworten, optional mit Kommentar („abends Termin, mittags 3 Std. möglich“).
 - **Board** mit allen Hochzeiten nach Status (Anfrage → Gebucht → Geplant).
-- **Kalender** mit den eigenen Einsätzen und Team-Terminen, als Liste oder Monatsansicht.
+- **Kalender** mit den eigenen Einsätzen und Team-Terminen, als Liste oder Monatsansicht. Mehrtägige Hochzeiten und Termine stehen an jedem ihrer Tage.
 - **News und Abstimmungen** des Teams.
 - **Profil:** Passwort ändern, Datenexport und Konto-Löschung (DSGVO Art. 17 und 20).
 
 **Für die Inhaberinnen (Admin)**
-- **Hochzeiten** anlegen, bearbeiten und durch die Status führen, Rückmeldungen sehen und Personal fest einteilen.
+- **Hochzeiten** anlegen, bearbeiten und durch die Status führen, Rückmeldungen sehen und Personal fest einteilen. Standard ist ein Tag; der Haken „Mehrere Tage“ neben dem Datum blendet ein Bis-Datum ein.
 - **Team:** neue Mitarbeitende freigeben, Team verwalten, Passwörter zurücksetzen.
 - **Organisation:** Aufgaben pro Hochzeit, Aktivitätsprotokoll, News, Abstimmungen und Termine.
 
@@ -106,7 +106,7 @@ flowchart LR
 | Datenbank | SQLite (better-sqlite3, WAL-Modus), Migrationen beim Start |
 | Auth | JWT und bcrypt, Rollen Admin und Staff |
 | Betrieb | nginx als Reverse-Proxy, systemd, Let's Encrypt, tägliche Backups |
-| Tests und CI | Vitest: API-Tests gegen einen echten Server-Prozess und Unit-Tests; GitHub Actions mit Node 22 und 24, Dependabot |
+| Tests und CI | Vitest: API-Tests gegen einen echten Server-Prozess und Unit-Tests; GitHub Actions mit Node 22 und 24, Renovate |
 
 ## Sicherheit und Datenschutz
 
@@ -143,7 +143,7 @@ Dann <http://localhost:3000> öffnen. Demo-Logins mit dem Passwort `demo1234`: `
 
 ### Demo-Daten
 
-`scripts/seed-demo.ts` legt ein erfundenes Team an (2 Admins, 6 Mitarbeitende und eine offene Registrierung), dazu Hochzeiten in allen vier Status, Rückmeldungen, News, Abstimmungen und Termine. Das Skript schreibt nur in eine neue Datei und bricht ab, wenn die Datenbank schon existiert. Eine echte Datenbank wird so nie verändert.
+`scripts/seed-demo.ts` legt ein erfundenes Team an (2 Admins, 6 Mitarbeitende und eine offene Registrierung), dazu Hochzeiten in allen vier Status (eine davon über ein ganzes Wochenende), Rückmeldungen, News, Abstimmungen und Termine. Das Skript schreibt nur in eine neue Datei und bricht ab, wenn die Datenbank schon existiert. Eine echte Datenbank wird so nie verändert.
 
 ### Screenshots aktualisieren
 
@@ -161,9 +161,9 @@ Andere Adressen oder Chrome-Pfad über `APP_URL`, `API_URL` bzw. `CHROME_PATH`. 
 npm test
 ```
 
-46 Tests mit Vitest in fünf Dateien:
-- **API-Tests** gegen einen echten Server-Prozess mit eigener Test-Datenbank: Login, Token-Prüfung, gelöschte und nicht freigegebene Accounts, Rechte von Admins und Mitarbeitenden, geschützte und versteckte Accounts, Aktivitätsprotokoll.
-- **Unit-Tests** für Betreuungszeiten, das Kalender-Raster und die Push-Benachrichtigungen nach Änderungen an einer Hochzeit.
+95 Tests mit Vitest in acht Dateien:
+- **API-Tests** gegen einen echten Server-Prozess mit eigener Test-Datenbank: Login, Token-Prüfung und -Ablauf, Passwortänderung, gelöschte und nicht freigegebene Accounts, Rechte von Admins und Mitarbeitenden, mehrtägige Hochzeiten, geschützte und versteckte Accounts, Aktivitätsprotokoll, Live-Stream per Einmal-Ticket, Push-Abos.
+- **Unit-Tests** für Betreuungszeiten, das Kalender-Raster mit mehrtägigen Zeiträumen, Datum und Zeitraum einer Hochzeit, Stream-Tickets und die Push-Benachrichtigungen nach Änderungen an einer Hochzeit.
 
 Die CI auf GitHub Actions prüft bei jedem Push und Pull Request Typen, Tests und Build mit Node 22 und 24.
 
@@ -180,15 +180,14 @@ Die CI auf GitHub Actions prüft bei jedem Push und Pull Request Typen, Tests un
 
 ## Releases und Versionen
 
-Dieser Showcase zeigt den Stand von Version **1.15.1**. Die Versionsnummer steht in `package.json` und erscheint in der App im Profil. Der Versionsverlauf und die Entwicklungshistorie liegen im privaten Produktiv-Repository.
+Dieser Showcase zeigt den Stand von Version **1.18.0**. Die Versionsnummer steht in `package.json` und erscheint in der App im Profil. Der Versionsverlauf und die Entwicklungshistorie liegen im privaten Produktiv-Repository.
 
 ## Projektstruktur
 
 ```
 .
 ├── .github/
-│   ├── workflows/ci.yml        Typecheck, Tests und Build bei jedem Push (Node 22 und 24)
-│   └── dependabot.yml          Wöchentliche Updates für npm und GitHub Actions
+│   └── workflows/ci.yml        Typecheck, Tests und Build bei jedem Push (Node 22 und 24)
 ├── src/
 │   ├── server/                 Backend (Express)
 │   │   ├── server.ts           Einstiegspunkt: DB öffnen, Server starten
@@ -210,6 +209,7 @@ Dieser Showcase zeigt den Stand von Version **1.15.1**. Die Versionsnummer steht
 │   └── readme-screenshots.mjs  Screenshots für diese README
 ├── docs/screenshots/
 ├── .env.example                Alle Einstellungen mit Erklärung
+├── renovate.json               Automatische Updates für npm und GitHub Actions (Renovate)
 ├── SECURITY.md                 Sicherheitslücken vertraulich melden
 ├── LICENSE
 └── NOTICE                      Ausnahmen von der Lizenz (Name, Logo, Icons)
@@ -230,7 +230,7 @@ Alle Endpunkte sprechen JSON und brauchen einen Login-Token (`Authorization: Bea
 | `GET` | `/api/auth/export-data` | Eigene Daten exportieren (DSGVO Art. 20) | alle |
 | `DELETE` | `/api/auth/delete-account` | Eigenes Konto löschen (DSGVO Art. 17) | alle |
 | `GET` | `/api/weddings` | Alle Hochzeiten mit Rückmeldungen | alle |
-| `POST` | `/api/weddings` | Hochzeit anlegen | Admin |
+| `POST` | `/api/weddings` | Hochzeit anlegen, optional mit `endDate` für mehrere Tage | Admin |
 | `PATCH` | `/api/weddings/:id` | Hochzeit ändern; Mitarbeitende dürfen nur die eigene Rückmeldung setzen | alle (eingeschränkt) |
 | `DELETE` | `/api/weddings/:id` | Hochzeit löschen | Admin |
 | `GET` | `/api/weddings/:id/activity` | Aktivitätsprotokoll einer Hochzeit | Admin |
@@ -250,7 +250,8 @@ Alle Endpunkte sprechen JSON und brauchen einen Login-Token (`Authorization: Bea
 | `POST`, `PATCH`, `DELETE` | `/api/events`, `/api/events/:id` | Termine anlegen, ändern, löschen | Admin |
 | `GET` | `/api/admin/dashboard` | Kennzahlen: aktive Hochzeiten, Hochzeiten ohne Personal, offene Anfragen | Admin |
 | `GET` | `/api/admin/activity` | Aktivitätsprotokoll gesamt | Admin |
-| `GET` | `/api/stream?token=…` | Live-Updates (Server-Sent Events); Token als Parameter, weil EventSource keine Header senden kann | alle |
+| `POST` | `/api/stream/ticket` | Einmal-Ticket für die Live-Updates (60 Sekunden gültig) | alle |
+| `GET` | `/api/stream?ticket=…` | Live-Updates (Server-Sent Events); Ticket statt Token in der URL, weil EventSource keine Header senden kann | ohne Login (Ticket) |
 | `GET` | `/api/push/public-key` | Öffentlicher VAPID-Schlüssel | ohne Login |
 | `POST` | `/api/push/subscribe`, `/api/push/unsubscribe` | Push für dieses Gerät an- oder abmelden | alle |
 | `POST` | `/api/push/test` | Test-Benachrichtigung an die eigenen Geräte | alle |
@@ -259,14 +260,14 @@ Alle Endpunkte sprechen JSON und brauchen einen Login-Token (`Authorization: Bea
 
 | Tabelle | Wichtige Spalten |
 |---|---|
-| `users` | `username` (eindeutig), `name`, `password_hash`, `role` (`Admin`/`Staff`), `department`, `status` (`active`/`pending`) |
-| `weddings` | `couple_names`, `date`, `betreuungszeit`, `location`, `status` (`Anfrage`/`Gebucht`/`Geplant`/`Abgesagt`), `children_count`, `staff_needed`, `notes` |
-| `assignments` | `wedding_id`, `staff_id`, `status` (`Ja`/`Nein`/`Vielleicht`/`Ausstehend`), `assigned` (fest eingeteilt), eindeutig pro Hochzeit und Person |
+| `users` | `username` (eindeutig), `name`, `password_hash`, `role` (`Admin`/`Staff`), `department`, `status` (`active`/`pending`), `password_changed_at` |
+| `weddings` | `couple_names`, `date`, `end_date` (nur bei mehreren Tagen), `betreuungszeit`, `location`, `status` (`Anfrage`/`Gebucht`/`Geplant`/`Abgesagt`), `children_count`, `staff_needed`, `notes` |
+| `assignments` | `wedding_id`, `staff_id`, `status` (`Ja`/`Nein`/`Vielleicht`/`Ausstehend`), `assigned` (fest eingeteilt), `comment`, eindeutig pro Hochzeit und Person |
 | `todo_items` | `wedding_id`, `text`, `done`, `sort_order` |
 | `activity_log` | `wedding_id`, `event_type`, `description`, `actor_name` |
 | `notes` | News: `text`, `created_by_id` |
 | `polls`, `poll_votes` | Frage; eine Stimme (`Ja`/`Nein`/`Vielleicht`) pro Person und Abstimmung |
-| `events` | Termine: `title`, `date`, `time`, `description`, `public` |
+| `events` | Termine: `title`, `date`, `end_date`, `start_time`, `end_time`, `description`, `color`, `public` |
 | `push_subscriptions` | `user_id`, `endpoint` (eindeutig), Schlüssel des Browsers |
 
 Gelöschte Hochzeiten und Konten nehmen ihre Rückmeldungen, Aufgaben und Push-Abos per `ON DELETE CASCADE` mit.

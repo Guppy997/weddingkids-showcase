@@ -21,6 +21,7 @@ export interface WeddingRow {
   couple_names: string;
   initials: string;
   date: string;
+  end_date: string | null;
   betreuungszeit: string | null;
   location: string;
   status: 'Anfrage' | 'Gebucht' | 'Geplant' | 'Abgesagt';

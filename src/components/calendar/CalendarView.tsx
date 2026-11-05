@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, List, Table } from 'lucide-react';
 import type { Wedding, AdminEvent } from '../../types';
-import { createMonthGrid, getDateKey, parseDateKey, bucketEventsByDate } from './calendarUtils';
+import { createMonthGrid, bucketEventsByDate, addToDateRange } from './calendarUtils';
+import { isWeddingOver } from '../../lib/weddingDates';
 import { useEventForm } from './useEventForm';
 import { CalendarListView } from './CalendarListView';
 import { EventForm } from './EventForm';
@@ -43,17 +44,15 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ weddings, events, on
   // Admins sehen Anfragen zusätzlich gelb im Kalender. Staff sehen Anfragen
   // gar nicht — die haben dafür den eigenen "Anfragen"-Tab zum Voten und
   // sollen im Kalender nur ihre festen Einsätze + Termine sehen.
-  // Abgeschlossene Hochzeiten (Datum >1 Tag her, nicht abgesagt) werden wie im
+  // Abgeschlossene Hochzeiten (letzter Tag >1 Tag her, nicht abgesagt) werden wie im
   // Board ausgeblendet — sie sind im Admin-Panel im "Abgeschlossen"-Block zu finden.
-  const oneDayMs = 24 * 60 * 60 * 1000;
-  const cutoff = Date.now() - oneDayMs;
   const plannedWeddings = useMemo(
     () => {
       const allowedStatuses = isAdmin
         ? ['Gebucht', 'Geplant', 'Anfrage']
         : ['Gebucht', 'Geplant'];
       let filtered = weddings.filter(
-        (w) => allowedStatuses.includes(w.status) && !(new Date(w.date).getTime() < cutoff && w.status !== 'Abgesagt')
+        (w) => allowedStatuses.includes(w.status) && !(isWeddingOver(w) && w.status !== 'Abgesagt')
       );
       if (!isAdmin && currentUser) {
         filtered = filtered.filter(w => w.assignedStaffIds.includes(currentUser.id));
@@ -72,13 +71,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ weddings, events, on
   const weddingsByDate = useMemo(() => {
     const bucket: Record<string, Wedding[]> = {};
 
-    plannedWeddings.forEach((wedding) => {
-      const key = getDateKey(parseDateKey(wedding.date));
-      if (!bucket[key]) {
-        bucket[key] = [];
-      }
-      bucket[key].push(wedding);
-    });
+    // Mehrtägige Hochzeiten erscheinen an jedem Tag von Start bis Ende.
+    plannedWeddings.forEach((wedding) => addToDateRange(bucket, wedding, wedding.date, wedding.endDate));
 
     Object.values(bucket).forEach((items) => {
       items.sort((a, b) => a.coupleNames.localeCompare(b.coupleNames, 'de'));

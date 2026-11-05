@@ -38,6 +38,24 @@ export const createMonthGrid = (baseDate: Date) => {
 };
 
 /**
+ * Legt `item` auf jeden Tag von `startKey` bis `endKey` (inkl.) in `bucket`.
+ * Sicherheits-Cap: max 60 Tage Span, falls jemand absurd lange Zeiträume anlegt.
+ */
+export function addToDateRange<T>(bucket: Record<string, T[]>, item: T, startKey: string, endKey?: string | null) {
+  const start = parseDateKey(startKey);
+  const end = endKey ? parseDateKey(endKey) : start;
+  const maxIters = 60;
+  let iter = 0;
+  const cursor = new Date(start);
+  while (cursor <= end && iter < maxIters) {
+    const key = getDateKey(cursor);
+    (bucket[key] ??= []).push(item);
+    cursor.setDate(cursor.getDate() + 1);
+    iter++;
+  }
+}
+
+/**
  * Ordnet Termine den Tagen zu. Mehrtägige Termine erscheinen an JEDEM Tag
  * zwischen Start- und End-Datum (inkl.). Private Termine nur für Admins.
  */
@@ -46,19 +64,7 @@ export function bucketEventsByDate(events: AdminEvent[] | undefined, includePriv
   (events || []).forEach((ev) => {
     if (!ev) return;
     if (!includePrivate && !ev.public) return;
-    const start = parseDateKey(ev.date);
-    const end = ev.endDate ? parseDateKey(ev.endDate) : start;
-    // Sicherheits-Cap: max 60 Tage Span, falls jemand absurd lange Termine anlegt
-    const maxIters = 60;
-    let iter = 0;
-    const cursor = new Date(start);
-    while (cursor <= end && iter < maxIters) {
-      const key = getDateKey(cursor);
-      if (!bucket[key]) bucket[key] = [];
-      bucket[key].push(ev);
-      cursor.setDate(cursor.getDate() + 1);
-      iter++;
-    }
+    addToDateRange(bucket, ev, ev.date, ev.endDate);
   });
   return bucket;
 }

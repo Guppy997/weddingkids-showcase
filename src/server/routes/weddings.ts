@@ -6,7 +6,7 @@ import { sendPushToUsers } from '../lib/push.js';
 import { notifyWeddingUpdate } from '../lib/weddingNotifications.js';
 import { authMiddleware, adminMiddleware, type AuthRequest } from '../middleware/auth.js';
 import { broadcastUpdate } from '../lib/sse.js';
-import { toISO } from '../lib/dates.js';
+import { toISO, formatWeddingDateDE } from '../lib/dates.js';
 import { HIDDEN_USER_IDS } from '../config.js';
 import type { UserRow, WeddingRow, AssignmentRow } from '../types.js';
 
@@ -17,6 +17,18 @@ interface IncomingVote {
   staffId?: string;
   status?: string;
   comment?: unknown;
+}
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * End-Datum aus dem Request normalisieren: leer, ungültig oder nicht nach dem
+ * Start → null (eintägig). `undefined` = Feld nicht mitgeschickt.
+ */
+function normalizeEndDate(endDate: unknown, date: string): string | null | undefined {
+  if (endDate === undefined) return undefined;
+  if (typeof endDate !== 'string' || !DATE_RE.test(endDate) || endDate === date) return null;
+  return endDate;
 }
 
 // ─── Weddings ────────────────────────────────────────────────────────────────
@@ -33,6 +45,7 @@ function getWeddingsWithAssignments() {
     coupleNames: w.couple_names,
     initials: w.initials,
     date: w.date,
+    endDate: w.end_date ?? null,
     betreuungszeit: w.betreuungszeit ?? undefined,
     location: w.location,
     status: w.status,
@@ -55,11 +68,13 @@ router.post('/api/weddings', authMiddleware, adminMiddleware, (req: Request, res
   try {
     const { coupleNames, initials, date, betreuungszeit, location, status, childrenCount, staffNeeded, notes } = req.body;
     if (!coupleNames || !date || !location || !status) return res.status(400).json({ error: 'Required fields missing' });
+    const endDate = normalizeEndDate(req.body.endDate, date) ?? null;
+    if (endDate && endDate < date) return res.status(400).json({ error: 'End-Datum muss nach Start-Datum liegen' });
     const db = getDb();
     const id = `w-${randomUUID()}`;
     const autoInitials = initials ?? coupleNames.split(' & ').map((n: string) => n[0]).join('&');
-    db.prepare('INSERT INTO weddings (id, couple_names, initials, date, betreuungszeit, location, status, children_count, staff_needed, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
-      .run(id, coupleNames, autoInitials, date, betreuungszeit ?? null, location, status, childrenCount ?? 0, staffNeeded ?? 0, notes ?? '');
+    db.prepare('INSERT INTO weddings (id, couple_names, initials, date, end_date, betreuungszeit, location, status, children_count, staff_needed, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .run(id, coupleNames, autoInitials, date, endDate, betreuungszeit ?? null, location, status, childrenCount ?? 0, staffNeeded ?? 0, notes ?? '');
     // Activity Log: neue Hochzeit angelegt
     logActivity(id, 'wedding_created', `Neue Hochzeit angelegt (${status})`, (req as AuthRequest).user!.name);
     const [wedding] = getWeddingsWithAssignments().filter(w => w.id === id);
@@ -73,7 +88,7 @@ router.post('/api/weddings', authMiddleware, adminMiddleware, (req: Request, res
       const recipients = db.prepare(
         "SELECT id FROM users WHERE status = 'active' AND id != ?"
       ).all((req as AuthRequest).user!.userId) as { id: string }[];
-      const dateStr = new Date(date).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
+      const dateStr = formatWeddingDateDE(date, endDate);
       sendPushToUsers(recipients.map(r => r.id), {
         title: 'Neue Hochzeit',
         body: `${coupleNames} – ${dateStr} in ${location}`,
@@ -100,13 +115,21 @@ router.patch('/api/weddings/:id', authMiddleware, (req: AuthRequest, res: Respon
     const existing = db.prepare('SELECT * FROM weddings WHERE id = ?').get(req.params.id) as WeddingRow | undefined;
     if (!existing) return res.status(404).json({ error: 'Wedding not found' });
 
+    // End-Datum gegen das (ggf. neue) Start-Datum prüfen. Wird nur das Start-Datum
+    // auf/hinter ein bestehendes End-Datum verschoben, wird die Hochzeit eintägig.
+    const newDate: string = req.body.date ?? existing.date;
+    let endDate = normalizeEndDate(req.body.endDate, newDate);
+    if (endDate && endDate < newDate) return res.status(400).json({ error: 'End-Datum muss nach Start-Datum liegen' });
+    if (endDate === undefined && req.body.date !== undefined && existing.end_date && existing.end_date <= newDate) endDate = null;
+    if (endDate !== undefined) req.body.endDate = endDate;
+
     // Status VOR der Änderung merken (für Push-Trigger weiter unten)
     const prevAssignedSnapshot = (db.prepare(
       'SELECT staff_id FROM assignments WHERE wedding_id = ? AND assigned = 1'
     ).all(req.params.id) as Pick<AssignmentRow, 'staff_id'>[]).map(r => r.staff_id);
 
     const colMap: Record<string, string> = {
-      coupleNames: 'couple_names', initials: 'initials', date: 'date',
+      coupleNames: 'couple_names', initials: 'initials', date: 'date', endDate: 'end_date',
       betreuungszeit: 'betreuungszeit', location: 'location', status: 'status',
       childrenCount: 'children_count', staffNeeded: 'staff_needed', notes: 'notes',
     };
@@ -135,6 +158,7 @@ router.patch('/api/weddings/:id', authMiddleware, (req: AuthRequest, res: Respon
     const fieldLabels: Record<string, { label: string; col: keyof WeddingRow }> = {
       coupleNames: { label: 'Paar', col: 'couple_names' },
       date: { label: 'Datum', col: 'date' },
+      endDate: { label: 'Enddatum', col: 'end_date' },
       betreuungszeit: { label: 'Betreuungszeit', col: 'betreuungszeit' },
       location: { label: 'Ort', col: 'location' },
       childrenCount: { label: 'Kinderanzahl', col: 'children_count' },

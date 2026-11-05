@@ -2,6 +2,7 @@ import React from 'react';
 import { Calendar as CalendarIcon, Trash2, Pencil } from 'lucide-react';
 import type { Wedding, AdminEvent } from '../../types';
 import { WEDDING_STATUS_BADGE } from '../../lib/status';
+import { formatWeddingDateRange, isMultiDayWedding } from '../../lib/weddingDates';
 
 interface DayDetailsProps {
   selectedDateKey: string;
@@ -123,6 +124,11 @@ export const DayDetails: React.FC<DayDetailsProps> = ({
                 <div className="flex justify-between items-start">
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-800 truncate">{wedding.coupleNames}</p>
+                    {isMultiDayWedding(wedding) && (
+                      <p className="text-xs mt-1 text-gray-500 truncate">
+                        {formatWeddingDateRange(wedding, { weekday: 'short', day: '2-digit', month: '2-digit' })}
+                      </p>
+                    )}
                     <p className="text-xs mt-1 text-gray-500 truncate">{wedding.location}</p>
                     {wedding.betreuungszeit && (
                       <p className="text-xs text-gray-500 truncate">

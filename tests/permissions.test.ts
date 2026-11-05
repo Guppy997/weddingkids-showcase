@@ -51,6 +51,52 @@ describe('Hochzeiten', () => {
   });
 });
 
+describe('Mehrtägige Hochzeiten', () => {
+  it('Admins können einen Zeitraum anlegen, ändern und wieder entfernen', async () => {
+    const created = await api('POST', '/api/weddings', token('admin'), {
+      coupleNames: 'Wochenende', date: '2027-04-09', endDate: '2027-04-11', location: 'Ulm', status: 'Anfrage',
+    });
+    expect(created.status).toBe(201);
+    expect(created.body.endDate).toBe('2027-04-11');
+    const id = created.body.id;
+
+    const longer = await api('PATCH', `/api/weddings/${id}`, token('admin'), { endDate: '2027-04-12' });
+    expect(longer.body.endDate).toBe('2027-04-12');
+
+    const single = await api('PATCH', `/api/weddings/${id}`, token('admin'), { endDate: null });
+    expect(single.status).toBe(200);
+    expect(single.body.endDate).toBeNull();
+  });
+
+  it('eintägig bleibt eintägig (kein End-Datum)', async () => {
+    const res = (await api('GET', '/api/weddings', token('admin'))).body.find((w: any) => w.id === weddingId);
+    expect(res.endDate).toBeNull();
+  });
+
+  it('End-Datum vor dem Start wird abgelehnt', async () => {
+    const res = await api('POST', '/api/weddings', token('admin'), {
+      coupleNames: 'Falsch', date: '2027-04-09', endDate: '2027-04-08', location: 'Ulm', status: 'Anfrage',
+    });
+    expect(res.status).toBe(400);
+    const patch = await api('PATCH', `/api/weddings/${weddingId}`, token('admin'), { endDate: '2027-01-01' });
+    expect(patch.status).toBe(400);
+  });
+
+  it('Start auf/hinter das End-Datum verschoben → wieder eintägig', async () => {
+    const { body } = await api('POST', '/api/weddings', token('admin'), {
+      coupleNames: 'Verschoben', date: '2027-05-07', endDate: '2027-05-09', location: 'Ulm', status: 'Anfrage',
+    });
+    const res = await api('PATCH', `/api/weddings/${body.id}`, token('admin'), { date: '2027-05-20' });
+    expect(res.body.date).toBe('2027-05-20');
+    expect(res.body.endDate).toBeNull();
+  });
+
+  it('Mitarbeitende dürfen das End-Datum nicht ändern', async () => {
+    const res = await api('PATCH', `/api/weddings/${weddingId}`, token('staff'), { endDate: '2027-06-14' });
+    expect(res.status).toBe(403);
+  });
+});
+
 describe('Abstimmen', () => {
   it('Mitarbeitende können mit Kommentar abstimmen', async () => {
     const res = await api('PATCH', `/api/weddings/${weddingId}`, token('staff'), {
