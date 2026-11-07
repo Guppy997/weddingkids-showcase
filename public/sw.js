@@ -87,8 +87,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Service Worker selbst & Manifest: immer Netzwerk (sonst keine Updates)
-  if (url.pathname === '/sw.js' || url.pathname === '/manifest.json') {
+  // Service Worker selbst, Manifest & version.json: immer Netzwerk (sonst keine Updates)
+  if (url.pathname === '/sw.js' || url.pathname === '/manifest.json' || url.pathname === '/version.json') {
     event.respondWith(fetch(request));
     return;
   }

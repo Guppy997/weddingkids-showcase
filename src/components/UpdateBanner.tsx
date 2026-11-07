@@ -17,6 +17,21 @@ import { RefreshCw } from 'lucide-react';
  */
 export const UpdateBanner: React.FC = () => {
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
+  const [whatsNew, setWhatsNew] = useState<string | null>(null);
+
+  // Sobald ein Update bereitsteht: kurze Beschreibung der Neuerung holen.
+  // Der Zeitstempel umgeht den Cache-first-Handler einer älteren sw.js.
+  useEffect(() => {
+    if (!waitingWorker) return;
+    fetch(`/version.json?t=${Date.now()}`, { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(v => {
+        if (v && typeof v.version === 'string' && typeof v.headline === 'string') {
+          setWhatsNew(`Neu in ${v.version}: ${v.headline}`);
+        }
+      })
+      .catch(() => { /* Fallback: Standardtext */ });
+  }, [waitingWorker]);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
@@ -108,7 +123,7 @@ export const UpdateBanner: React.FC = () => {
             </div>
             <div className="text-left">
               <p className="text-sm font-bold leading-tight">Neue Version verfügbar</p>
-              <p className="text-[11px] opacity-90 leading-tight">Tippen zum Aktualisieren</p>
+              <p className="text-[11px] opacity-90 leading-tight">{whatsNew ?? 'Tippen zum Aktualisieren'}</p>
             </div>
           </div>
           <span className="text-xs font-bold uppercase tracking-wider bg-white/15 px-3 py-1.5 rounded-full">
