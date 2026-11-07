@@ -148,7 +148,8 @@ export const WeddingsTab: React.FC<WeddingsTabProps> = ({
   // (danach kommen Abgesagt und Abgeschlossen als aufklappbare Blöcke)
   const activeStatuses: ProjectStatus[] = ['Anfrage', 'Gebucht', 'Geplant'];
   const activeWeddings = weddingsForYear.filter(w => activeStatuses.includes(w.status) && !isCompleted(w));
-  const cancelledWeddings = weddingsForYear.filter(w => w.status === 'Abgesagt');
+  // Abgesagte nur bis zum (letzten) Tag — danach löscht der Server sie automatisch
+  const cancelledWeddings = weddingsForYear.filter(w => w.status === 'Abgesagt' && !isWeddingOver(w));
   const completedWeddings = weddingsForYear.filter(isCompleted);
 
   const renderWeddingCard = (wedding: Wedding, muted = false) => (

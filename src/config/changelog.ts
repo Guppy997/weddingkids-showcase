@@ -11,6 +11,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.19.0',
+    date: '2026-11-07',
+    title: 'Abgesagte Hochzeiten räumen sich selbst auf',
+    items: [
+      'Abgesagte Hochzeiten werden nach ihrem Datum automatisch gelöscht und verschwinden aus dem Admin-Bereich.',
+      'Im Verlauf steht dazu jeweils ein Eintrag.',
+    ],
+  },
+  {
     version: '1.18.1',
     date: '2026-11-05',
     title: 'Datum und Uhrzeit leichter eintragen',
