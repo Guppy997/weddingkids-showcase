@@ -62,7 +62,7 @@ const weddings: {
   { id: 'demo-w1', couple: 'Clara & Felix', date: '2026-05-16', time: '15:00 Uhr - 23:00 Uhr; 8 Stunden', location: 'Schloss Lindenhain', status: 'Geplant', children: 9, staff: 2, assigned: ['demo-marie', 'demo-jonas'] },
   { id: 'demo-w2', couple: 'Nina & David', date: '2026-06-20', time: '16:00 Uhr - 22:00 Uhr; 6 Stunden', location: 'Gut Eichenhof', status: 'Geplant', children: 6, staff: 2, assigned: ['demo-emma', 'demo-paul'] },
   { id: 'demo-w3', couple: 'Sarah & Lukas', date: '2026-08-08', time: '14:00 Uhr - 22:00 Uhr; 8 Stunden', location: 'Hofgut Sonnenhang', status: 'Geplant', children: 12, staff: 3, assigned: ['demo-marie', 'demo-hannah', 'demo-finn'] },
-  { id: 'demo-w4', couple: 'Anna & Elias', date: '2026-09-05', time: '16:00 Uhr - 23:00 Uhr; 7 Stunden', location: 'Weingut am See', status: 'Abgesagt', children: 4, staff: 1 },
+  { id: 'demo-w4', couple: 'Anna & Elias', date: '2027-03-20', time: '16:00 Uhr - 23:00 Uhr; 7 Stunden', location: 'Weingut am See', status: 'Abgesagt', children: 4, staff: 1 },
   { id: 'demo-w5', couple: 'Laura & Max', date: '2026-10-17', time: '15:30 Uhr - 23:30 Uhr; 8 Stunden', location: 'Landgut Wiesental', status: 'Geplant', children: 10, staff: 2,
     notes: 'Zwei Kleinkinder unter 2 Jahren, Mittagsschlaf einplanen.',
     votes: [['demo-marie', 'Ja'], ['demo-jonas', 'Ja'], ['demo-emma', 'Nein', 'Bin auf einer anderen Feier']], assigned: ['demo-marie', 'demo-jonas'] },

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, CheckCircle2, AlertCircle, Eye, EyeOff, Download, Trash2, Shield, Bell, BellOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { apiExportData, apiDeleteAccount } from '../api';
+import { ChangelogModal } from './ChangelogModal';
 import { isPushSupported, isPushSubscribed, isStandalonePWA, subscribeToPush, unsubscribeFromPush } from '../lib/push';
 
 const AVATAR_COLORS = [
@@ -32,6 +33,7 @@ type Section = 'profile' | 'password' | 'privacy';
 export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose, onShowLegal }) => {
   const { user, token, logout, updateProfile, changePassword } = useAuth();
   const [section, setSection] = useState<Section>('profile');
+  const [showChangelog, setShowChangelog] = useState(false);
 
   // Profile form
   const [name, setName] = useState(user?.name ?? '');
@@ -408,12 +410,18 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({ onClose, onShowLegal
               <p className="text-[11px] text-gray-300 font-medium tracking-wide">
                 WeddingKids · Version {__APP_VERSION__}
               </p>
+              <button onClick={() => setShowChangelog(true)}
+                className="mt-1 text-[11px] text-gray-400 hover:text-primary underline">
+                Neu in der App
+              </button>
             </div>
           </div>
         )}
 
         <div className="h-[env(safe-area-inset-bottom)]" />
       </motion.div>
+
+      {showChangelog && <ChangelogModal onClose={() => setShowChangelog(false)} />}
     </div>
   );
 };

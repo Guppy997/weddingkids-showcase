@@ -6,13 +6,18 @@ import 'dotenv/config';
 import { initializeDatabase, closeDatabase } from './database.js';
 import { createApp } from './app.js';
 import { PORT, HOST } from './config.js';
+import { runCleanupSafely, CLEANUP_INTERVAL_MS } from './lib/cleanup.js';
 
 function startServer() {
   try {
     if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET environment variable must be set');
     initializeDatabase();
+    // Abgelaufene abgesagte Hochzeiten löschen: beim Start und danach stündlich
+    runCleanupSafely();
+    const cleanupTimer = setInterval(runCleanupSafely, CLEANUP_INTERVAL_MS);
+    cleanupTimer.unref();
     const server = createApp().listen(PORT, HOST, () => console.log(`✅ Server running on ${HOST}:${PORT}`));
-    process.on('SIGTERM', () => server.close(() => { closeDatabase(); process.exit(0); }));
+    process.on('SIGTERM', () => { clearInterval(cleanupTimer); server.close(() => { closeDatabase(); process.exit(0); }); });
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);

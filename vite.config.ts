@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig, type Plugin } from 'vite';
 import { readFileSync, writeFileSync } from 'fs';
+import { LATEST_ENTRY } from './src/config/changelog';
 
 const pkg = JSON.parse(readFileSync(path.resolve('./package.json'), 'utf-8'));
 
@@ -20,6 +21,15 @@ function swVersionPlugin(version: string): Plugin {
           .replace(/weddingkids-v[\w.\-]+/g, `weddingkids-v${version}`);
         writeFileSync(swPath, content);
       } catch { /* sw.js nicht vorhanden (z.B. Dev) → ignorieren */ }
+
+      // version.json: der Update-Hinweis der ALTEN App-Version holt sich hier,
+      // was in der neuen Version neu ist (die alte kennt den neuen Text nicht).
+      try {
+        writeFileSync(
+          path.resolve(__dirname, 'dist/version.json'),
+          JSON.stringify({ version, headline: LATEST_ENTRY.title }) + '\n',
+        );
+      } catch { /* dist nicht vorhanden → ignorieren */ }
     },
   };
 }

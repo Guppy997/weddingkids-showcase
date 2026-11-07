@@ -5,6 +5,7 @@ import type { ProjectStatus } from '../../types';
 import type { StaffMember, WeddingFormState } from './types';
 import { calculateHours, formatHours } from './betreuungszeit';
 import { inputClass, labelClass } from './styles';
+import { suggestEndDate } from '../calendar/calendarUtils';
 
 interface WeddingFormProps {
   weddingForm: WeddingFormState;
@@ -39,12 +40,21 @@ export const WeddingForm: React.FC<WeddingFormProps> = ({
           <label className={labelClass}>{weddingForm.multiDay ? 'Von' : 'Datum'}</label>
           <label className="flex items-center gap-1.5 text-xs text-gray-500 mb-2 cursor-pointer select-none">
             <input type="checkbox" checked={weddingForm.multiDay}
-              onChange={e => setWeddingForm({ ...weddingForm, multiDay: e.target.checked, endDate: e.target.checked ? weddingForm.endDate : '' })}
+              onChange={e => setWeddingForm({
+                ...weddingForm,
+                multiDay: e.target.checked,
+                endDate: e.target.checked ? suggestEndDate(weddingForm.date, weddingForm.endDate) : '',
+              })}
               className="w-4 h-4 accent-primary" />
             Mehrere Tage
           </label>
         </div>
-        <input type="date" value={weddingForm.date} onChange={e => setWeddingForm({ ...weddingForm, date: e.target.value })} required className={inputClass} />
+        <input type="date" value={weddingForm.date} required className={inputClass}
+          onChange={e => setWeddingForm({
+            ...weddingForm,
+            date: e.target.value,
+            endDate: weddingForm.multiDay ? suggestEndDate(e.target.value, weddingForm.endDate) : weddingForm.endDate,
+          })} />
         {weddingForm.multiDay && (
           <div className="mt-3">
             <label className={labelClass}>Bis</label>
@@ -72,6 +82,13 @@ export const WeddingForm: React.FC<WeddingFormProps> = ({
               className={inputClass} />
           </div>
         </div>
+        {/* Uhrzeit-Felder lassen sich auf dem Handy nicht leeren → eigener Link */}
+        {(weddingForm.startTime || weddingForm.endTime) && (
+          <button type="button" onClick={() => setWeddingForm({ ...weddingForm, startTime: '', endTime: '' })}
+            className="text-xs text-gray-500 underline mt-2">
+            Zeit entfernen
+          </button>
+        )}
         {/* Bei mehreren Tagen: Beginn am ersten, Ende am letzten Tag — keine Dauer-Rechnung */}
         {!weddingForm.multiDay && weddingForm.startTime && weddingForm.endTime && (() => {
           const h = calculateHours(weddingForm.startTime, weddingForm.endTime);
