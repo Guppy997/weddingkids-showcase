@@ -17,6 +17,10 @@ export const USERS = {
   // Tokens ungültig und dürfen die Tokens der anderen Tests nicht berühren.
   pwchange: { id: 'pwchange-0-0000-0000-000000000000',  username: 'pwchange1', name: 'Paula Passwort', role: 'Staff', status: 'active' },
   resetme:  { id: 'resetme-00-0000-0000-000000000000',  username: 'resetme1',  name: 'Rudi Reset',     role: 'Staff', status: 'active' },
+  // Eigene Accounts für tests/integrity.test.ts: einer ändert seinen Namen,
+  // die andere wird samt ihren News, Terminen und Abstimmungen gelöscht.
+  renamer:  { id: 'renamer-00-0000-0000-000000000000',  username: 'renamer1',  name: 'Rita Rename',    role: 'Staff', status: 'active' },
+  author:   { id: 'author-000-0000-0000-000000000000',  username: 'author1',   name: 'Anke Autorin',   role: 'Admin', status: 'active' },
 } as const;
 
 /**

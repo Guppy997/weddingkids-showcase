@@ -23,7 +23,7 @@ export function deleteExpiredCancelledWeddings(): number {
   const remove = db.prepare('DELETE FROM weddings WHERE id = ?');
   db.transaction(() => {
     for (const w of expired) {
-      logActivity(null, 'wedding_deleted', `Abgesagte Hochzeit automatisch gelöscht: ${w.couple_names}`, 'System');
+      logActivity(null, 'wedding_deleted', `Abgesagte Hochzeit automatisch gelöscht: ${w.couple_names}`, null);
       remove.run(w.id);
     }
   })();

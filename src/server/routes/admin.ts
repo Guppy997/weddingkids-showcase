@@ -22,38 +22,46 @@ router.get('/api/admin/dashboard', authMiddleware, adminMiddleware, (_req: Reque
 // ─── Activity Log ─────────────────────────────────────────────────────────────
 
 // Aktivitätsprotokoll: Versteckte System-Accounts (admin/test) sollen für
-// die echten Admins nicht im Verlauf erscheinen. Wir filtern per actor_name
-// — die Namen der versteckten User holen wir aus der users-Tabelle.
-function getHiddenActorNames(): string[] {
-  if (HIDDEN_USER_IDS.length === 0) return [];
-  const placeholders = HIDDEN_USER_IDS.map(() => '?').join(',');
-  return (getDb().prepare(`SELECT name FROM users WHERE id IN (${placeholders})`)
+// die echten Admins nicht im Verlauf erscheinen. Gefiltert wird über die
+// Account-ID (actor_id), nicht über den Namen: Sonst verschwände aus dem
+// Verlauf, wer sich wie ein versteckter Account nennt.
+//
+// Ausnahme Altbestand: Einträge aus der Zeit vor actor_id, die sich keinem
+// Account eindeutig zuordnen ließen, haben keine ID. Für sie (und nur für sie)
+// gilt weiter der alte Namensfilter, damit durch das Update nichts sichtbar
+// wird, was vorher verborgen war. Neue Einträge haben immer eine ID oder
+// stammen vom Server („System“).
+function hiddenActorFilter(column: string, nameColumn: string): { sql: string; params: string[] } {
+  if (HIDDEN_USER_IDS.length === 0) return { sql: '1 = 1', params: [] };
+  const ids = HIDDEN_USER_IDS.map(() => '?').join(',');
+  const hiddenNames = (getDb().prepare(`SELECT name FROM users WHERE id IN (${ids})`)
     .all(...HIDDEN_USER_IDS) as { name: string }[]).map(r => r.name);
+  const names = hiddenNames.map(() => '?').join(',');
+  const legacy = hiddenNames.length ? `${nameColumn} NOT IN (${names})` : '1 = 1';
+  return {
+    sql: `((${column} IS NULL AND ${legacy}) OR (${column} IS NOT NULL AND ${column} NOT IN (${ids})))`,
+    params: [...hiddenNames, ...HIDDEN_USER_IDS],
+  };
 }
 
 router.get('/api/weddings/:id/activity', authMiddleware, adminMiddleware, (req: Request, res: Response) => {
-  const hiddenNames = getHiddenActorNames();
-  const namePlaceholders = hiddenNames.length ? hiddenNames.map(() => '?').join(',') : '';
-  const excludeSql = namePlaceholders ? ` AND actor_name NOT IN (${namePlaceholders})` : '';
+  const visible = hiddenActorFilter('actor_id', 'actor_name');
   const rows = getDb().prepare(
-    `SELECT * FROM activity_log WHERE wedding_id = ?${excludeSql} ORDER BY created_at DESC LIMIT 50`
-  ).all(req.params.id, ...hiddenNames) as ActivityRow[];
+    `SELECT * FROM activity_log WHERE wedding_id = ? AND ${visible.sql} ORDER BY created_at DESC LIMIT 50`
+  ).all(req.params.id, ...visible.params) as ActivityRow[];
   res.json(rows.map(r => ({ id: r.id, weddingId: r.wedding_id, eventType: r.event_type, description: r.description, actorName: r.actor_name, createdAt: toISO(r.created_at) })));
 });
 
 router.get('/api/admin/activity', authMiddleware, adminMiddleware, (_req: Request, res: Response) => {
-  const db = getDb();
-  const hiddenNames = getHiddenActorNames();
-  const namePlaceholders = hiddenNames.length ? hiddenNames.map(() => '?').join(',') : '';
-  const excludeSql = namePlaceholders ? ` WHERE a.actor_name NOT IN (${namePlaceholders})` : '';
-  const rows = db.prepare(`
+  const visible = hiddenActorFilter('a.actor_id', 'a.actor_name');
+  const rows = getDb().prepare(`
     SELECT a.*, w.couple_names
     FROM activity_log a
     LEFT JOIN weddings w ON w.id = a.wedding_id
-    ${excludeSql}
+    WHERE ${visible.sql}
     ORDER BY a.created_at DESC
     LIMIT 100
-  `).all(...hiddenNames) as (ActivityRow & { couple_names: string | null })[];
+  `).all(...visible.params) as (ActivityRow & { couple_names: string | null })[];
   res.json(rows.map(r => ({
     id: r.id, weddingId: r.wedding_id, weddingName: r.couple_names,
     eventType: r.event_type, description: r.description,

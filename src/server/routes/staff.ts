@@ -5,6 +5,7 @@ import { hashPassword, passwordError } from '../lib/credentials.js';
 import { authMiddleware, adminMiddleware, type AuthRequest } from '../middleware/auth.js';
 import { broadcastUpdate } from '../lib/sse.js';
 import { HIDDEN_USER_IDS, PROTECTED_USER_IDS, NOT_HIDDEN_SQL } from '../config.js';
+import { isNameTaken } from '../lib/profile.js';
 import type { UserRow } from '../types.js';
 
 const router = Router();
@@ -34,11 +35,17 @@ router.get('/api/staff/pending', authMiddleware, adminMiddleware, (_req: Request
 
 router.post('/api/staff/:id/approve', authMiddleware, adminMiddleware, (req: AuthRequest, res: Response) => {
   const db = getDb();
-  const u = db.prepare("SELECT name FROM users WHERE id = ?").get(req.params.id) as Pick<UserRow, 'name'> | undefined;
+  const u = db.prepare("SELECT name FROM users WHERE id = ? AND status = 'pending'").get(req.params.id) as Pick<UserRow, 'name'> | undefined;
+  // Anzeigenamen sind im Team eindeutig (siehe lib/profile.ts). Die Anfrage selbst
+  // prüft das bewusst nicht: Sie braucht keinen Login und würde sonst verraten,
+  // wer im Team ist.
+  if (u && isNameTaken(u.name, req.params.id)) {
+    return res.status(409).json({ error: `Im Team gibt es schon jemanden mit dem Namen „${u.name}“. Bitte die Anfrage ablehnen und mit einem eindeutigen Namen neu stellen lassen.` });
+  }
   const result = db.prepare("UPDATE users SET status = 'active' WHERE id = ? AND status = 'pending'").run(req.params.id);
   if (result.changes === 0) return res.status(404).json({ error: 'Ausstehender User nicht gefunden' });
   if (u) {
-    logActivity(null, 'staff_approved', `Mitarbeiter:in freigegeben: ${u.name}`, req.user!.name);
+    logActivity(null, 'staff_approved', `Mitarbeiter:in freigegeben: ${u.name}`, req.user!);
   }
   res.json({ message: 'User freigegeben' });
   broadcastUpdate('staff_changed');
@@ -49,6 +56,12 @@ router.delete('/api/staff/:id', authMiddleware, adminMiddleware, (req: AuthReque
   if (PROTECTED_USER_IDS.includes(req.params.id)) {
     return res.status(403).json({ error: 'Dieser Account kann nicht gelöscht werden.' });
   }
+  // Das eigene Konto geht nur über Profil → „Konto löschen“ (DELETE /api/auth/delete-account):
+  // Dort wird das Passwort abgefragt und verhindert, dass der letzte Admin verschwindet.
+  // Über diese Route ließ sich beides umgehen.
+  if (req.params.id === req.user!.userId) {
+    return res.status(400).json({ error: 'Dein eigenes Konto löschst du im Profil unter „Konto löschen“.' });
+  }
   const db = getDb();
   const u = db.prepare("SELECT name, status FROM users WHERE id = ?").get(req.params.id) as Pick<UserRow, 'name' | 'status'> | undefined;
   db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
@@ -57,7 +70,7 @@ router.delete('/api/staff/:id', authMiddleware, adminMiddleware, (req: AuthReque
     const description = u.status === 'pending'
       ? `Mitarbeiteranfrage abgelehnt: ${u.name}`
       : `Mitarbeiter:in entfernt: ${u.name}`;
-    logActivity(null, eventType, description, req.user!.name);
+    logActivity(null, eventType, description, req.user!);
   }
   res.json({ message: 'User gelöscht' });
   broadcastUpdate('staff_changed');
@@ -81,7 +94,7 @@ router.post('/api/staff/:id/reset-password', authMiddleware, adminMiddleware, as
     // Zeitpunkt setzen → alle bisherigen Logins dieser Person sind abgemeldet
     db.prepare('UPDATE users SET password_hash = ?, password_changed_at = ? WHERE id = ?')
       .run(hash, new Date().toISOString(), target.id);
-    logActivity(null, 'password_reset', `Passwort zurückgesetzt: ${target.name}`, req.user!.name);
+    logActivity(null, 'password_reset', `Passwort zurückgesetzt: ${target.name}`, req.user!);
     res.json({ message: 'Passwort zurückgesetzt' });
   } catch (err) {
     console.error('Password reset error:', err);

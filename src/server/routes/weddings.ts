@@ -76,7 +76,7 @@ router.post('/api/weddings', authMiddleware, adminMiddleware, (req: Request, res
     db.prepare('INSERT INTO weddings (id, couple_names, initials, date, end_date, betreuungszeit, location, status, children_count, staff_needed, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
       .run(id, coupleNames, autoInitials, date, endDate, betreuungszeit ?? null, location, status, childrenCount ?? 0, staffNeeded ?? 0, notes ?? '');
     // Activity Log: neue Hochzeit angelegt
-    logActivity(id, 'wedding_created', `Neue Hochzeit angelegt (${status})`, (req as AuthRequest).user!.name);
+    logActivity(id, 'wedding_created', `Neue Hochzeit angelegt (${status})`, (req as AuthRequest).user!);
     const [wedding] = getWeddingsWithAssignments().filter(w => w.id === id);
     res.status(201).json(wedding);
     broadcastUpdate('weddings_changed');
@@ -150,7 +150,7 @@ router.patch('/api/weddings/:id', authMiddleware, (req: AuthRequest, res: Respon
 
     // Log status change
     if (req.body.status && req.body.status !== existing.status) {
-      logActivity(req.params.id, 'status_change', `Status: ${existing.status} → ${req.body.status}`, req.user!.name);
+      logActivity(req.params.id, 'status_change', `Status: ${existing.status} → ${req.body.status}`, req.user!);
     }
 
     // Log andere Feld-Änderungen (Datum, Ort, Personalbedarf etc.) – aber nicht Status/Assignments,
@@ -169,7 +169,7 @@ router.patch('/api/weddings/:id', authMiddleware, (req: AuthRequest, res: Respon
       .filter(([key, { col }]) => req.body[key] !== undefined && String(req.body[key] ?? '') !== String(existing[col] ?? ''))
       .map(([, { label }]) => label);
     if (changedLabels.length > 0) {
-      logActivity(req.params.id, 'wedding_edited', `Geändert: ${changedLabels.join(', ')}`, req.user!.name);
+      logActivity(req.params.id, 'wedding_edited', `Geändert: ${changedLabels.join(', ')}`, req.user!);
     }
 
     if (Array.isArray(req.body.assignments)) {
@@ -199,7 +199,7 @@ router.patch('/api/weddings/:id', authMiddleware, (req: AuthRequest, res: Respon
           deleteVote.run(req.params.id, a.staffId);
           if (prev && prev !== 'Ausstehend') {
             const staffName = (getStaffName.get(a.staffId) as Pick<UserRow, 'name'> | undefined)?.name ?? a.staffId;
-            logActivity(req.params.id, 'vote_cast', `${staffName}: Stimme zurückgezogen`, req.user!.name);
+            logActivity(req.params.id, 'vote_cast', `${staffName}: Stimme zurückgezogen`, req.user!);
           }
           continue;
         }
@@ -207,7 +207,7 @@ router.patch('/api/weddings/:id', authMiddleware, (req: AuthRequest, res: Respon
         // Log Vote nur bei tatsächlicher Änderung und gültigen Werten
         if (prev !== a.status && ['Ja', 'Nein', 'Vielleicht'].includes(a.status)) {
           const staffName = (getStaffName.get(a.staffId) as Pick<UserRow, 'name'> | undefined)?.name ?? a.staffId;
-          logActivity(req.params.id, 'vote_cast', `${staffName}: ${a.status}`, req.user!.name);
+          logActivity(req.params.id, 'vote_cast', `${staffName}: ${a.status}`, req.user!);
         }
       }
 
@@ -238,13 +238,13 @@ router.patch('/api/weddings/:id', authMiddleware, (req: AuthRequest, res: Respon
         upsertAssigned.run(req.params.id, staffId);
         if (!prevAssigned.includes(staffId)) {
           const staffUser = db.prepare('SELECT name FROM users WHERE id = ?').get(staffId) as Pick<UserRow, 'name'> | undefined;
-          logActivity(req.params.id, 'staff_assigned', `${staffUser?.name ?? staffId} eingeteilt`, req.user!.name);
+          logActivity(req.params.id, 'staff_assigned', `${staffUser?.name ?? staffId} eingeteilt`, req.user!);
         }
       }
       for (const staffId of prevAssigned) {
         if (!assignedIds.includes(staffId)) {
           const staffUser = db.prepare('SELECT name FROM users WHERE id = ?').get(staffId) as Pick<UserRow, 'name'> | undefined;
-          logActivity(req.params.id, 'staff_removed', `${staffUser?.name ?? staffId} entfernt`, req.user!.name);
+          logActivity(req.params.id, 'staff_removed', `${staffUser?.name ?? staffId} entfernt`, req.user!);
         }
       }
     }
@@ -272,7 +272,7 @@ router.delete('/api/weddings/:id', authMiddleware, adminMiddleware, (req: AuthRe
   if (!w) return res.status(404).json({ error: 'Wedding not found' });
   // Log BEVOR die Hochzeit gelöscht wird (durch ON DELETE SET NULL bleibt der Eintrag stehen,
   // damit man im Verlauf sieht, dass „X gelöscht hat …")
-  logActivity(null, 'wedding_deleted', `Hochzeit gelöscht: ${w.couple_names}`, req.user!.name);
+  logActivity(null, 'wedding_deleted', `Hochzeit gelöscht: ${w.couple_names}`, req.user!);
   db.prepare('DELETE FROM weddings WHERE id = ?').run(req.params.id);
   res.json({ message: 'Wedding deleted' });
   broadcastUpdate('weddings_changed');
