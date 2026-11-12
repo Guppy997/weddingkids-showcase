@@ -11,6 +11,16 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '1.19.1',
+    date: '2026-11-10',
+    title: 'Sicherheits-Update',
+    items: [
+      'Jeden Namen gibt es im Team nur noch einmal. Wer seinen Namen ändert, kann keinen nehmen, den schon jemand trägt.',
+      'Wird ein Account gelöscht, bleiben dessen News, Termine und Abstimmungen erhalten.',
+      'Das eigene Konto löschst du nur noch im Profil unter „Konto löschen“.',
+    ],
+  },
+  {
     version: '1.19.0',
     date: '2026-11-07',
     title: 'Abgesagte Hochzeiten räumen sich selbst auf',

@@ -4,6 +4,23 @@ Alle wichtigen Änderungen an diesem Projekt stehen hier. Das Format folgt [Keep
 
 Die Einträge für die Nutzer:innen der App stehen in Alltagssprache in [`src/config/changelog.ts`](src/config/changelog.ts) und erscheinen in der App unter **Profil → Neu in der App**. Ältere Versionen vor 1.11.0 sind nur im privaten Produktiv-Repository dokumentiert.
 
+## [1.19.1] - 2026-11-10
+
+### Sicherheit
+- Verlauf und Datenexport hängen an der Account-ID statt am frei wählbaren Anzeigenamen (neue Spalte `activity_log.actor_id`). Vorher bekam, wer sich wie eine andere Person nannte, deren Verlauf im Datenexport und trat im Verlauf und in Push-Nachrichten unter ihrem Namen auf.
+- Anzeigenamen sind unter aktiven Accounts eindeutig, unabhängig von Groß- und Kleinschreibung und Leerzeichen. Geprüft wird beim Ändern im Profil, beim Anlegen durch Admins und bei der Freigabe einer Zugangsanfrage.
+- Profilbilder werden nur noch als eingebettetes Bild (Data-URL mit JPEG, PNG oder WebP) angenommen. Eine Web-Adresse wäre bei allen im Team geladen worden und hätte dem fremden Server deren IP-Adresse verraten.
+- Das eigene Konto lässt sich nicht mehr über die Team-Verwaltung (`DELETE /api/staff/:id`) löschen. Dieser Weg umging die Passwortabfrage und die Prüfung auf den letzten Admin.
+- Fehlerantworten kommen immer als JSON, ohne Stacktrace oder Serverpfade.
+
+### Behoben
+- Accounts, die eine Abstimmung angelegt hatten, ließen sich nicht löschen, auch nicht über „Konto löschen“.
+- Beim Löschen eines Admins verschwanden dessen News und Termine. News, Termine und Abstimmungen bleiben jetzt erhalten, `created_by_id` wird geleert und der Name bleibt stehen.
+
+### Geändert
+- Datenbank-Migration beim ersten Start: `activity_log` bekommt die Spalte `actor_id`, ältere Einträge werden zugeordnet, wenn genau ein Account den Namen trägt. `notes`, `events` und `polls` werden neu aufgebaut, ohne dass Daten verloren gehen. Ein neuer Test spielt das Update auf eine Datenbank im Stand 1.19.0 ein.
+- Die Rate-Limits lassen sich für die Testsuite über `AUTH_LIMIT_PER_15_MIN` und `WRITE_LIMIT_PER_MIN` anheben. Im Betrieb gelten weiter 20 Anmeldeversuche pro 15 Minuten und 60 schreibende Anfragen pro Minute.
+
 ## [1.19.0] - 2026-11-07
 
 ### Hinzugefügt
