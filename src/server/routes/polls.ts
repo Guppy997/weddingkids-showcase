@@ -58,7 +58,7 @@ router.post('/api/polls', authMiddleware, adminMiddleware, (req: AuthRequest, re
     const id = `poll-${randomUUID()}`;
     db.prepare('INSERT INTO polls (id, question, created_by_id, created_by_name) VALUES (?, ?, ?, ?)')
       .run(id, question.trim(), req.user!.userId, req.user!.name);
-    logActivity(null, 'poll_created', `Neue Abstimmung: ${preview(question.trim())}`, req.user!.name);
+    logActivity(null, 'poll_created', `Neue Abstimmung: ${preview(question.trim())}`, req.user!);
     res.status(201).json(loadPollsForUser(req.user!.userId).find(p => p.id === id));
     broadcastUpdate('polls_changed');
 
@@ -87,7 +87,7 @@ router.delete('/api/polls/:id', authMiddleware, adminMiddleware, (req: AuthReque
   const p = db.prepare('SELECT question FROM polls WHERE id = ?').get(req.params.id) as Pick<PollRow, 'question'> | undefined;
   db.prepare('DELETE FROM polls WHERE id = ?').run(req.params.id);
   if (p) {
-    logActivity(null, 'poll_deleted', `Abstimmung gelöscht: ${preview(p.question)}`, req.user!.name);
+    logActivity(null, 'poll_deleted', `Abstimmung gelöscht: ${preview(p.question)}`, req.user!);
   }
   res.json({ message: 'Poll deleted' });
   broadcastUpdate('polls_changed');

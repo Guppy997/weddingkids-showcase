@@ -46,7 +46,8 @@ export interface NoteRow {
   id: string;
   text: string;
   created_at: string;
-  created_by_id: string;
+  /** null, wenn der Account der Autorin inzwischen gelöscht ist */
+  created_by_id: string | null;
   created_by_name: string;
 }
 
@@ -66,6 +67,8 @@ export interface ActivityRow {
   event_type: string;
   description: string;
   actor_name: string;
+  /** Account-ID des Auslösers; null bei Einträgen des Servers und nicht zuordenbaren Altbeständen */
+  actor_id: string | null;
   created_at: string;
 }
 
@@ -81,14 +84,16 @@ export interface EventRow {
   color: string | null;
   public: 0 | 1;
   created_at: string;
-  created_by_id: string;
+  /** null, wenn der Account der Autorin inzwischen gelöscht ist */
+  created_by_id: string | null;
   created_by_name: string;
 }
 
 export interface PollRow {
   id: string;
   question: string;
-  created_by_id: string;
+  /** null, wenn der Account der Autorin inzwischen gelöscht ist */
+  created_by_id: string | null;
   created_by_name: string;
   created_at: string;
 }

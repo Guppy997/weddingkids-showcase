@@ -25,7 +25,7 @@
   </tr>
 </table>
 
-<sub>Screenshots mit Demo-Daten (siehe <a href="#demo-daten">Demo-Daten</a>), alle Namen und Orte sind erfunden. Aktuelle Version: 1.19.0.</sub>
+<sub>Screenshots mit Demo-Daten (siehe <a href="#demo-daten">Demo-Daten</a>), alle Namen und Orte sind erfunden. Aktuelle Version: 1.19.1.</sub>
 
 ## Inhalt
 
@@ -121,13 +121,17 @@ Die App verarbeitet personenbezogene Daten (Team, Hochzeitspaare, Kinderzahlen).
 - **Live-Updates** öffnen die Verbindung mit einem Einmal-Ticket, das 60 Sekunden gilt. Der Login-Token steht nie in einer URL und landet so nicht in Server-Logs.
 - **Push-Abos** nur für die Push-Dienste der Browser. Eine eingetragene Adresse kann den Server nicht zu Anfragen ins interne Netz bringen.
 - **Rechte serverseitig:** Mitarbeitende können per API nur ihre eigene Rückmeldung ändern. Alles andere ist Admins vorbehalten, unabhängig davon, was die Oberfläche anzeigt.
+- **Verlauf und Datenexport** hängen an der Account-ID, nicht am Anzeigenamen. Anzeigenamen sind im Team eindeutig, niemand kann unter dem Namen einer anderen Person auftreten.
+- **Konten löschen** lässt News, Termine und Abstimmungen der Person stehen. Das eigene Konto geht nur über „Konto löschen“ mit Passwort, und der letzte Admin bleibt.
+- **Profilbilder** nur als eingebettetes Bild (JPEG, PNG, WebP). Web-Adressen, die beim ganzen Team geladen würden, lehnt der Server ab.
+- **Fehlerantworten** immer als JSON, ohne Stacktrace oder Serverpfade.
 - **SQL** ausschließlich mit Platzhaltern, keine String-Verkettung von Eingaben.
 - **Rate-Limits** für Login und schreibende Anfragen, Längen-Limits für Textfelder.
 - **HTTP-Header** über helmet und nginx: strenge Content-Security-Policy, HSTS, `X-Frame-Options: DENY`.
 - **Betroffenenrechte:** Alle können ihre Daten selbst exportieren und ihr Konto löschen. Nur der letzte Admin muss vorher einen anderen bestimmen.
 - **Server:** Firewall, SSH nur per Schlüssel, fail2ban gegen Brute-Force.
 
-Die API-Tests in [`tests/`](tests/) prüfen genau diese Regeln, zum Beispiel „Tokens mit falschem Secret“, „gelöschte Mitarbeitende verlieren sofort den Zugriff“, „Mitarbeitende können nicht für andere abstimmen“ oder „ein Stream-Ticket gilt nur einmal“. Die CI bricht ab, sobald `npm audit` eine bekannte Lücke in den Server-Abhängigkeiten meldet.
+Die API-Tests in [`tests/`](tests/) prüfen genau diese Regeln, zum Beispiel „Tokens mit falschem Secret“, „gelöschte Mitarbeitende verlieren sofort den Zugriff“, „Mitarbeitende können nicht für andere abstimmen“, „ein Stream-Ticket gilt nur einmal“ oder „Name einer anderen Person annehmen“. Ein eigener Test spielt Datenbank-Updates auf eine Datenbank im alten Stand ein und prüft, dass nichts verloren geht. Die CI bricht ab, sobald `npm audit` eine bekannte Lücke in den Server-Abhängigkeiten meldet.
 
 Sicherheitslücken bitte vertraulich melden, wie in [`SECURITY.md`](SECURITY.md) beschrieben.
 
@@ -164,9 +168,9 @@ Andere Adressen oder Chrome-Pfad über `APP_URL`, `API_URL` bzw. `CHROME_PATH`. 
 npm test
 ```
 
-102 Tests mit Vitest in neun Dateien:
-- **API-Tests** gegen einen echten Server-Prozess mit eigener Test-Datenbank: Login, Token-Prüfung und -Ablauf, Passwortänderung, gelöschte und nicht freigegebene Accounts, Rechte von Admins und Mitarbeitenden, mehrtägige Hochzeiten, geschützte und versteckte Accounts, Aktivitätsprotokoll, Live-Stream per Einmal-Ticket, Push-Abos.
-- **Unit-Tests** für Betreuungszeiten, das Kalender-Raster mit mehrtägigen Zeiträumen, Datum und Zeitraum einer Hochzeit, Stream-Tickets, die Push-Benachrichtigungen nach Änderungen an einer Hochzeit und das automatische Löschen abgesagter Hochzeiten.
+121 Tests mit Vitest in elf Dateien:
+- **API-Tests** gegen einen echten Server-Prozess mit eigener Test-Datenbank: Login, Token-Prüfung und -Ablauf, Passwortänderung, gelöschte und nicht freigegebene Accounts, Rechte von Admins und Mitarbeitenden, mehrtägige Hochzeiten, geschützte und versteckte Accounts, Aktivitätsprotokoll, eindeutige Anzeigenamen, Konten löschen, Profilbilder, Fehlerantworten, Live-Stream per Einmal-Ticket, Push-Abos.
+- **Unit-Tests** für Betreuungszeiten, das Kalender-Raster mit mehrtägigen Zeiträumen, Datum und Zeitraum einer Hochzeit, Stream-Tickets, die Push-Benachrichtigungen nach Änderungen an einer Hochzeit, das automatische Löschen abgesagter Hochzeiten und die Datenbank-Migration aus dem Stand 1.19.0.
 
 Die CI auf GitHub Actions prüft bei jedem Push und Pull Request Typen, Tests und Build mit Node 22 und 24.
 
@@ -183,7 +187,7 @@ Die CI auf GitHub Actions prüft bei jedem Push und Pull Request Typen, Tests un
 
 ## Releases und Versionen
 
-Dieser Showcase zeigt den Stand von Version **1.19.0**, gleichauf mit dem Produktivcode. Versionen folgen [Semantic Versioning](https://semver.org/lang/de/): neue Funktion = Minor (1.**19**.0), Fehlerbehebung = Patch (1.18.**1**).
+Dieser Showcase zeigt den Stand von Version **1.19.1**, gleichauf mit dem Produktivcode. Versionen folgen [Semantic Versioning](https://semver.org/lang/de/): neue Funktion = Minor (1.**19**.0), Fehlerbehebung = Patch (1.18.**1**).
 
 Alle Änderungen stehen im [`CHANGELOG.md`](CHANGELOG.md). Zu jedem Release gehören:
 
@@ -239,7 +243,7 @@ Alle Endpunkte sprechen JSON und brauchen einen Login-Token (`Authorization: Bea
 | `POST` | `/api/auth/request-access` | Zugang beantragen, das Konto wartet auf Freigabe | ohne Login |
 | `POST` | `/api/auth/register` | Konto direkt anlegen | Admin |
 | `POST` | `/api/auth/verify` | Token prüfen, liefert das eigene Konto | alle |
-| `PATCH` | `/api/auth/profile` | Eigenes Profil ändern | alle |
+| `PATCH` | `/api/auth/profile` | Eigenes Profil ändern; der Name muss im Team frei sein, Profilbild nur als eingebettetes Bild | alle |
 | `POST` | `/api/auth/change-password` | Eigenes Passwort ändern | alle |
 | `GET` | `/api/auth/export-data` | Eigene Daten exportieren (DSGVO Art. 20) | alle |
 | `DELETE` | `/api/auth/delete-account` | Eigenes Konto löschen (DSGVO Art. 17) | alle |
@@ -254,7 +258,7 @@ Alle Endpunkte sprechen JSON und brauchen einen Login-Token (`Authorization: Bea
 | `GET` | `/api/staff/pending` | Offene Zugangsanfragen | Admin |
 | `POST` | `/api/staff/:id/approve` | Zugang freigeben | Admin |
 | `POST` | `/api/staff/:id/reset-password` | Passwort zurücksetzen | Admin |
-| `DELETE` | `/api/staff/:id` | Mitarbeitende entfernen | Admin |
+| `DELETE` | `/api/staff/:id` | Mitarbeitende entfernen, nicht das eigene Konto | Admin |
 | `GET` | `/api/notes` | News lesen | alle |
 | `POST`, `DELETE` | `/api/notes`, `/api/notes/:id` | News anlegen oder löschen | Admin |
 | `GET` | `/api/polls` | Abstimmungen lesen | alle |
@@ -274,17 +278,17 @@ Alle Endpunkte sprechen JSON und brauchen einen Login-Token (`Authorization: Bea
 
 | Tabelle | Wichtige Spalten |
 |---|---|
-| `users` | `username` (eindeutig), `name`, `password_hash`, `role` (`Admin`/`Staff`), `department`, `status` (`active`/`pending`), `password_changed_at` |
+| `users` | `username` (eindeutig), `name` (eindeutig unter aktiven Accounts), `password_hash`, `role` (`Admin`/`Staff`), `department`, `status` (`active`/`pending`), `password_changed_at` |
 | `weddings` | `couple_names`, `date`, `end_date` (nur bei mehreren Tagen), `betreuungszeit`, `location`, `status` (`Anfrage`/`Gebucht`/`Geplant`/`Abgesagt`), `children_count`, `staff_needed`, `notes` |
 | `assignments` | `wedding_id`, `staff_id`, `status` (`Ja`/`Nein`/`Vielleicht`/`Ausstehend`), `assigned` (fest eingeteilt), `comment`, eindeutig pro Hochzeit und Person |
 | `todo_items` | `wedding_id`, `text`, `done`, `sort_order` |
-| `activity_log` | `wedding_id`, `event_type`, `description`, `actor_name` |
-| `notes` | News: `text`, `created_by_id` |
+| `activity_log` | `wedding_id`, `event_type`, `description`, `actor_id` (Account, entscheidet über Export und Sichtbarkeit), `actor_name` (nur Anzeige) |
+| `notes` | News: `text`, `created_by_id` (leer, wenn das Konto gelöscht ist), `created_by_name` |
 | `polls`, `poll_votes` | Frage; eine Stimme (`Ja`/`Nein`/`Vielleicht`) pro Person und Abstimmung |
 | `events` | Termine: `title`, `date`, `end_date`, `start_time`, `end_time`, `description`, `color`, `public` |
 | `push_subscriptions` | `user_id`, `endpoint` (eindeutig), Schlüssel des Browsers |
 
-Gelöschte Hochzeiten und Konten nehmen ihre Rückmeldungen, Aufgaben und Push-Abos per `ON DELETE CASCADE` mit. Abgesagte Hochzeiten löscht der Server automatisch, sobald ihr (letzter) Tag vorbei ist.
+Gelöschte Hochzeiten und Konten nehmen ihre Rückmeldungen, Aufgaben und Push-Abos per `ON DELETE CASCADE` mit. News, Termine und Abstimmungen eines gelöschten Kontos bleiben stehen (`ON DELETE SET NULL`), der Name steht weiter in `created_by_name`. Abgesagte Hochzeiten löscht der Server automatisch, sobald ihr (letzter) Tag vorbei ist.
 
 ## Grenzen und Ideen
 

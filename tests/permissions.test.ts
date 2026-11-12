@@ -188,8 +188,21 @@ describe('Aktivitätsprotokoll', () => {
   });
 
   it('blendet Aktionen versteckter Accounts aus', async () => {
-    const res = await api('GET', '/api/admin/activity', token('admin'));
-    expect(res.body.some((e: any) => e.actorName === USERS.hidden.name)).toBe(false);
+    // Geprüft wird über den Vorgang selbst, nicht über den angezeigten Namen:
+    // Der Verlauf filtert nach Account-ID, und einen Namen kann jede:r tragen
+    // (siehe tests/integrity.test.ts).
+    const wedding = await api('POST', '/api/weddings', token('admin'), {
+      coupleNames: 'Vera & Stefan', date: '2031-08-01', location: 'Testort', status: 'Anfrage',
+    });
+    const vote = await api('PATCH', `/api/weddings/${wedding.body.id}`, token('hidden'), {
+      assignments: [{ staffId: USERS.hidden.id, status: 'Ja' }],
+    });
+    expect(vote.status).toBe(200);
+
+    const all = await api('GET', '/api/admin/activity', token('admin'));
+    expect(all.body.some((e: any) => e.weddingId === wedding.body.id && e.eventType === 'vote_cast')).toBe(false);
+    const perWedding = await api('GET', `/api/weddings/${wedding.body.id}/activity`, token('admin'));
+    expect(perWedding.body.map((e: any) => e.eventType)).toEqual(['wedding_created']);
   });
 });
 

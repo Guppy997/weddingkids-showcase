@@ -5,6 +5,7 @@ import { hashPassword, comparePassword, comparePasswordOrDummy, passwordError, g
 import { sendPushToUsers } from '../lib/push.js';
 import { authMiddleware, adminMiddleware, type AuthRequest } from '../middleware/auth.js';
 import { authLimiter } from '../middleware/rateLimit.js';
+import { isNameTaken, isAllowedAvatarImage, NAME_TAKEN_ERROR } from '../lib/profile.js';
 import type { UserRow, CountRow, IdRow } from '../types.js';
 
 const router = Router();
@@ -45,6 +46,7 @@ router.post('/api/auth/register', authLimiter, authMiddleware, adminMiddleware, 
     if (db.prepare('SELECT id FROM users WHERE username = ?').get(username)) {
       return res.status(400).json({ error: 'Username already exists' });
     }
+    if (isNameTaken(name)) return res.status(409).json({ error: NAME_TAKEN_ERROR });
     const id = randomUUID();
     const passwordHash = await hashPassword(password);
     db.prepare('INSERT INTO users (id, username, name, password_hash, role, department) VALUES (?, ?, ?, ?, ?, ?)')
@@ -70,27 +72,40 @@ router.post('/api/auth/verify', authMiddleware, (req: AuthRequest, res: Response
 
 router.patch('/api/auth/profile', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
-    const { name, avatarColor, avatarImage } = req.body;
+    const { name, avatarColor, avatarImage } = req.body ?? {};
     const db = getDb();
-    if (name?.trim()) {
-      if (name.length > 80) return res.status(400).json({ error: 'Name zu lang (max 80 Zeichen)' });
-      db.prepare('UPDATE users SET name = ? WHERE id = ?').run(name.trim(), req.user!.userId);
+    const userId = req.user!.userId;
+
+    // Erst alles prüfen, dann speichern: Ein abgelehntes Feld darf die anderen
+    // nicht schon geändert haben.
+    let newName: string | undefined;
+    if (name !== undefined && name !== null && name !== '') {
+      if (typeof name !== 'string') return res.status(400).json({ error: 'Ungültiger Name' });
+      const trimmed = name.trim();
+      if (trimmed.length > 80) return res.status(400).json({ error: 'Name zu lang (max 80 Zeichen)' });
+      // Nur prüfen, wenn sich der Name wirklich ändert: Das Profil schickt ihn
+      // bei jedem Speichern mit, auch wenn nur die Farbe gewechselt wurde.
+      if (trimmed && trimmed !== req.user!.name) {
+        if (isNameTaken(trimmed, userId)) return res.status(409).json({ error: NAME_TAKEN_ERROR });
+        newName = trimmed;
+      }
     }
     if (avatarColor) {
       // Hex-Farbe validieren (#RRGGBB oder #RGB)
       if (typeof avatarColor !== 'string' || !/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(avatarColor)) {
         return res.status(400).json({ error: 'Ungültige Farbe' });
       }
-      db.prepare('UPDATE users SET avatar_color = ? WHERE id = ?').run(avatarColor, req.user!.userId);
     }
-    // avatarImage can be a base64 data-url string or null (to remove)
-    if (avatarImage !== undefined) {
-      // Größenlimit: 250 KB (komprimiertes Avatar reicht völlig — das Frontend komprimiert client-seitig)
-      if (avatarImage !== null && (typeof avatarImage !== 'string' || avatarImage.length > 250_000)) {
-        return res.status(400).json({ error: 'Profilbild zu groß. Bitte kleineres Bild wählen.' });
-      }
-      db.prepare('UPDATE users SET avatar_image = ? WHERE id = ?').run(avatarImage, req.user!.userId);
+    // avatarImage: eingebettetes Bild (Data-URL) oder null zum Entfernen.
+    // Web-Adressen werden abgelehnt, siehe lib/profile.ts.
+    if (avatarImage !== undefined && avatarImage !== null && !isAllowedAvatarImage(avatarImage)) {
+      return res.status(400).json({ error: 'Profilbild ungültig oder zu groß. Erlaubt sind JPEG, PNG und WebP bis ca. 185 KB.' });
     }
+
+    if (newName) db.prepare('UPDATE users SET name = ? WHERE id = ?').run(newName, userId);
+    if (avatarColor) db.prepare('UPDATE users SET avatar_color = ? WHERE id = ?').run(avatarColor, userId);
+    if (avatarImage !== undefined) db.prepare('UPDATE users SET avatar_image = ? WHERE id = ?').run(avatarImage, userId);
+
     const updated = db.prepare('SELECT id, name, role, department, avatar_color, avatar_image FROM users WHERE id = ?').get(req.user!.userId) as Pick<UserRow, 'id' | 'name' | 'role' | 'department' | 'avatar_color' | 'avatar_image'>;
     const newToken = generateToken({ userId: updated.id, name: updated.name, role: updated.role, department: updated.department });
     res.json({ token: newToken, user: { id: updated.id, name: updated.name, role: updated.role, department: updated.department, avatarColor: updated.avatar_color, avatarImage: updated.avatar_image ?? null } });
@@ -137,9 +152,9 @@ router.get('/api/auth/export-data', authMiddleware, (req: AuthRequest, res: Resp
     const activityLog = db.prepare(`
       SELECT al.event_type, al.description, al.created_at, w.couple_names
       FROM activity_log al LEFT JOIN weddings w ON al.wedding_id = w.id
-      WHERE al.actor_name = ?
+      WHERE al.actor_id = ?
       ORDER BY al.created_at DESC
-    `).all(user.name);
+    `).all(userId);
 
     const exportData = {
       exportedAt: new Date().toISOString(),

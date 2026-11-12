@@ -20,3 +20,14 @@ export const PROTECTED_USER_IDS = [...idList(process.env.PROTECTED_USER_IDS), ..
 export const NOT_HIDDEN_SQL = HIDDEN_USER_IDS.length
   ? ` AND id NOT IN (${HIDDEN_USER_IDS.map(() => '?').join(',')})`
   : '';
+
+// Obergrenzen der Rate-Limits (middleware/rateLimit.ts). Überschreibbar nur für
+// die Testsuite, die in Sekunden mehr Anfragen stellt als ein Mensch in einer
+// Minute. Im Betrieb nicht setzen: Die Standardwerte sind der Schutz gegen
+// Passwort-Raten und Spam.
+const positiveInt = (value: string | undefined, fallback: number): number => {
+  const n = Number(value);
+  return Number.isInteger(n) && n > 0 ? n : fallback;
+};
+export const AUTH_LIMIT_PER_15_MIN = positiveInt(process.env.AUTH_LIMIT_PER_15_MIN, 20);
+export const WRITE_LIMIT_PER_MIN = positiveInt(process.env.WRITE_LIMIT_PER_MIN, 60);

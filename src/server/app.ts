@@ -1,4 +1,4 @@
-import express, { type Request, type Response } from 'express';
+import express, { type ErrorRequestHandler, type Request, type Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { CLIENT_ORIGIN } from './config.js';
@@ -42,6 +42,18 @@ export function createApp() {
   app.get('/api/health', (_req: Request, res: Response) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
+
+  // Zentrale Fehlerbehandlung: immer JSON, nie die HTML-Fehlerseite von Express.
+  // Die enthält außerhalb von NODE_ENV=production den Stacktrace samt Serverpfaden.
+  // Der vierte Parameter ist Pflicht, sonst erkennt Express die Middleware nicht.
+  const onError: ErrorRequestHandler = (err, _req, res, _next) => {
+    const status = typeof err?.status === 'number' && err.status >= 400 && err.status < 500 ? err.status : 500;
+    if (status === 500) console.error('Unhandled error:', err);
+    if (res.headersSent) return;
+    const message = status === 413 ? 'Anfrage zu groß' : status === 500 ? 'Interner Serverfehler' : 'Ungültige Anfrage';
+    res.status(status).json({ error: message });
+  };
+  app.use(onError);
 
   return app;
 }

@@ -26,7 +26,7 @@ router.post('/api/notes', authMiddleware, adminMiddleware, (req: AuthRequest, re
     db.prepare('INSERT INTO notes (id, text, created_by_id, created_by_name) VALUES (?, ?, ?, ?)')
       .run(id, text.trim(), req.user!.userId, req.user!.name);
     // Activity Log
-    logActivity(null, 'note_created', `Neue Notiz: ${preview(text.trim())}`, req.user!.name);
+    logActivity(null, 'note_created', `Neue Notiz: ${preview(text.trim())}`, req.user!);
     const note = db.prepare('SELECT * FROM notes WHERE id = ?').get(id) as NoteRow;
     res.status(201).json({ id: note.id, text: note.text, createdAt: toISO(note.created_at), createdBy: note.created_by_name });
     broadcastUpdate('notes_changed');
@@ -56,7 +56,7 @@ router.delete('/api/notes/:id', authMiddleware, adminMiddleware, (req: AuthReque
   const note = db.prepare('SELECT text FROM notes WHERE id = ?').get(req.params.id) as Pick<NoteRow, 'text'> | undefined;
   db.prepare('DELETE FROM notes WHERE id = ?').run(req.params.id);
   if (note) {
-    logActivity(null, 'note_deleted', `Notiz gelöscht: ${preview(note.text)}`, req.user!.name);
+    logActivity(null, 'note_deleted', `Notiz gelöscht: ${preview(note.text)}`, req.user!);
   }
   res.json({ message: 'Note deleted' });
   broadcastUpdate('notes_changed');
