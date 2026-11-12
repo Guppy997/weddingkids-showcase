@@ -49,6 +49,9 @@ export default async function setup(project: TestProject) {
       CLIENT_ORIGIN: 'http://localhost',
       HIDDEN_USER_IDS: HIDDEN_ID,
       PROTECTED_USER_IDS: USERS.admin.id,
+      // Die Suite stellt in Sekunden mehr Anfragen, als die Limits pro Minute erlauben
+      AUTH_LIMIT_PER_15_MIN: '200',
+      WRITE_LIMIT_PER_MIN: '1000',
       VAPID_PUBLIC_KEY: '',
       VAPID_PRIVATE_KEY: '',
     },
