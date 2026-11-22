@@ -8,6 +8,10 @@
 ![SQLite](https://img.shields.io/badge/SQLite-WAL-008080)
 ![PWA](https://img.shields.io/badge/PWA-installierbar-008080)
 ![121 Tests](https://img.shields.io/badge/Tests-121-008080)
+[![Marke: WeddingKids](https://img.shields.io/badge/Name%20und%20Logo-gesch%C3%BCtzt-b91c1c)](TRADEMARKS.md)
+
+> [!IMPORTANT]
+> **Name und Logo „WeddingKids“ gehören dem Unternehmen WeddingKids** und sind nicht frei verwendbar, auch wenn der Code unter der Apache-Lizenz steht. Was erlaubt ist und was nicht, steht in [`TRADEMARKS.md`](TRADEMARKS.md).
 
 > **In short (English):** A scheduling app for a small company that provides childcare at weddings. Requests come in, the team reports availability, the owners assign staff, and everyone sees their own shifts in a calendar, with live updates and web push. In production since May 2026. This repository is a cleaned-up export with made-up demo data; the interface is in German.
 

@@ -2,7 +2,7 @@
 
 Der **Code** in diesem Repository steht unter der [Apache License 2.0](LICENSE). Du darfst ihn lesen, nutzen, verändern und weitergeben, solange du dich an die Lizenz hältst.
 
-Der **Name** und das **Erscheinungsbild** von WeddingKids sind davon ausgenommen. WeddingKids ist ein echtes Unternehmen, und Name, Logo und Icons sind seine Kennzeichen. Die Apache-Lizenz gibt dir daran keine Rechte (Abschnitt 6 der Lizenz), alle Rechte bleiben vorbehalten.
+Der **Name** und das **Erscheinungsbild** von WeddingKids sind davon ausgenommen. WeddingKids ist ein echtes Unternehmen, und Name, Logo und Icons sind seine Kennzeichen. **Die Rechte daran liegen beim Unternehmen WeddingKids**, nicht beim Autor dieses Repositories. Die Apache-Lizenz gibt dir daran keine Rechte (Abschnitt 6 der Lizenz), alle Rechte bleiben vorbehalten.
 
 ## Was dazu gehört
 
@@ -24,7 +24,7 @@ Der **Name** und das **Erscheinungsbild** von WeddingKids sind davon ausgenommen
 - den Eindruck erwecken, ein Angebot stamme von WeddingKids, sei mit WeddingKids verbunden oder von WeddingKids unterstützt
 - Name oder Logo in Domains, App-Store-Einträgen, Social-Media-Profilen oder Werbung verwenden
 
-Ausnahmen davon gibt es nur mit vorheriger schriftlicher Erlaubnis des Unternehmens WeddingKids.
+Ausnahmen davon gibt es nur mit vorheriger schriftlicher Erlaubnis des Unternehmens WeddingKids. Der Autor dieses Repositories kann sie nicht erteilen.
 
 ## Code weiterverwenden
 
@@ -38,4 +38,4 @@ Ein Hinweis wie „basiert auf dem WeddingKids-Showcase“ ist erlaubt, solange 
 
 ## Fragen
 
-Wenn du unsicher bist, ob deine Nutzung in Ordnung ist, frag vorher nach, über ein [Issue in diesem Repo](https://github.com/Guppy997/weddingkids-showcase/issues) oder über die Kontaktmöglichkeiten auf [weddingkids.de](https://weddingkids.de).
+Wenn du unsicher bist, ob deine Nutzung in Ordnung ist, frag vorher beim Unternehmen WeddingKids nach, über die Kontaktmöglichkeiten auf [weddingkids.de](https://weddingkids.de). Fragen zum Code selbst gehören in ein [Issue in diesem Repo](https://github.com/Guppy997/weddingkids-showcase/issues).
