@@ -230,7 +230,8 @@ Die vollständige Entwicklungshistorie liegt im privaten Produktiv-Repository.
 ├── CHANGELOG.md                Alle Änderungen pro Version
 ├── SECURITY.md                 Sicherheitslücken vertraulich melden
 ├── LICENSE
-└── NOTICE                      Ausnahmen von der Lizenz (Name, Logo, Icons)
+├── NOTICE                      Ausnahmen von der Lizenz (Name, Logo, Icons)
+└── TRADEMARKS.md               Was mit Name und Logo erlaubt ist und was nicht
 ```
 
 ## API
@@ -308,4 +309,4 @@ Entwickelt mit KI-Unterstützung (Claude). Idee, Architektur, Anforderungen, Tes
 
 ## Lizenz
 
-Der Quellcode steht unter der [Apache License 2.0](LICENSE). Ausgenommen sind der Name „WeddingKids“, das Logo und die App-Icons. Sie sind Kennzeichen des Unternehmens und dürfen nicht weiterverwendet werden, Details in [`NOTICE`](NOTICE).
+Der Quellcode steht unter der [Apache License 2.0](LICENSE). Ausgenommen sind der Name „WeddingKids“, das Logo und die App-Icons. Sie sind Kennzeichen des Unternehmens WeddingKids und dürfen nicht für eigene Angebote verwendet werden. Was erlaubt ist und was nicht, steht in [`TRADEMARKS.md`](TRADEMARKS.md), die rechtliche Ausnahme in [`NOTICE`](NOTICE).
