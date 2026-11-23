@@ -198,7 +198,7 @@ Alle Änderungen stehen im [`CHANGELOG.md`](CHANGELOG.md). Zu jedem Release geh�
 1. die Version in `package.json` (erscheint in der App im Profil),
 2. ein Eintrag in Alltagssprache in [`src/config/changelog.ts`](src/config/changelog.ts) (erscheint unter „Neu in der App“ und im Update-Hinweis),
 3. ein Eintrag im `CHANGELOG.md`,
-4. ein Git-Tag `vX.Y.Z` mit GitHub Release.
+4. ein Git-Tag `vX.Y.Z` mit GitHub Release. Das entsteht automatisch: Sobald die CI für einen Merge auf `main` grün ist und dort eine neue Version steht, legt `.github/workflows/release.yml` Tag und Release mit den Punkten aus `changelog.ts` an.
 
 Die vollständige Entwicklungshistorie liegt im privaten Produktiv-Repository.
 
